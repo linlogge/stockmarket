@@ -8,10 +8,19 @@ export const DashboardHeader = () => {
                 <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-                <i class="bi bi-calendar3"></i>
-                This week
-            </button>
+            <div class="dropdown">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-calendar3"></i>
+                    This week
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Today</a></li>
+                    <li><a class="dropdown-item" href="#">This week</a></li>
+                    <li><a class="dropdown-item" href="#">This month</a></li>
+                    <li><a class="dropdown-item" href="#">This quarter</a></li>
+                    <li><a class="dropdown-item" href="#">This year</a></li>
+                </ul>
+            </div>
         </div>
     `;
     return el;
