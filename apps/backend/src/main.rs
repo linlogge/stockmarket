@@ -1,19 +1,30 @@
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     routing::{get, post},
     Json, Router,
 };
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, EncodingKey, Header};
+use parking_lot::Mutex;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 
 const JWT_SECRET: &[u8] = b"secret";
 
+#[derive(Clone)]
+struct AppState {
+    transactions: Arc<Mutex<Vec<Trade>>>,
+}
+
 #[tokio::main]
 async fn main() {
+    let app_state = AppState {
+        transactions: Arc::new(Mutex::new(vec![])),
+    };
+
     let cors = CorsLayer::new().allow_origin(Any);
 
     let app = Router::new()
@@ -21,10 +32,12 @@ async fn main() {
         .route("/api/logout", post(logout))
         .route("/api/portfolio/history", get(portfolio_history))
         .route("/api/trade", post(handle_trade))
+        .route("/api/transactions", get(get_transactions))
         .route("/api/stocks", get(get_available_stocks))
         .route("/api/stocks/:symbol/price", get(get_stock_price))
         .route("/api/portfolio/summary", get(get_portfolio_summary))
-        .layer(cors);
+        .layer(cors)
+        .with_state(app_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("listening on {}", addr);
@@ -109,6 +122,7 @@ async fn get_available_stocks() -> Json<Vec<Stock>> {
     Json(stocks)
 }
 
+#[axum::debug_handler]
 async fn portfolio_history() -> Json<PortfolioHistory> {
     let history = PortfolioHistory {
         labels: vec![
@@ -127,12 +141,26 @@ async fn portfolio_history() -> Json<PortfolioHistory> {
     Json(history)
 }
 
-async fn handle_trade(Json(payload): Json<Trade>) -> Json<TradeResponse> {
+#[axum::debug_handler]
+async fn handle_trade(
+    State(state): State<AppState>,
+    Json(payload): Json<Trade>,
+) -> Json<TradeResponse> {
     println!("Received trade: {:?}", payload);
+    state.transactions.lock().push(payload.clone());
     let response = TradeResponse {
-        message: format!("Trade for {} {} {} successful!", payload.action, payload.quantity, payload.symbol),
+        message: format!(
+            "Trade for {} {} {} successful!",
+            payload.action, payload.quantity, payload.symbol
+        ),
     };
     Json(response)
+}
+
+#[axum::debug_handler]
+async fn get_transactions(State(state): State<AppState>) -> Json<Vec<Trade>> {
+    let transactions = state.transactions.lock().clone();
+    Json(transactions)
 }
 
 #[derive(Serialize)]
@@ -141,7 +169,7 @@ struct PortfolioHistory {
     data: Vec<f64>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize,Deserialize, Debug, Clone)]
 struct Trade {
     symbol: String,
     quantity: u32,

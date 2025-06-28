@@ -4,6 +4,7 @@ import { landingView } from "./views/landing.ts";
 import { dashboardView } from "./views/dashboard.ts";
 import { tradeView } from './views/trade.ts';
 import { loginView } from './views/login.ts';
+import { settingsView } from './views/settings.ts';
 import 'bootstrap';
 import { Navbar } from "./components/Navbar.ts";
 
@@ -29,4 +30,5 @@ router
     .addRoute('/dashboard', dashboardView, true)
     .addRoute('/trade', tradeView, true)
     .addRoute('/login', loginView)
+    .addRoute('/settings', settingsView, true)
     .start();

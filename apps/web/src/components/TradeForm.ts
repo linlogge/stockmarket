@@ -1,6 +1,10 @@
-import { stockService } from "../services/stockService";
+import { stockService, type Trade } from "../services/stockService";
 
-export const TradeForm = () => {
+interface TradeFormProps {
+    onTradeSuccess: (trade: Trade) => void;
+}
+
+export const TradeForm = (props: TradeFormProps) => {
     const el = document.createElement('div');
     el.innerHTML = `
         <div class="card">
@@ -97,13 +101,16 @@ export const TradeForm = () => {
         }
 
         try {
-            const response = await stockService.submitTrade({
+            const trade = {
                 symbol: symbol,
                 quantity: parseInt(quantityInput.value, 10),
                 action: actionInput.value
-            });
+            };
+            const response = await stockService.submitTrade(trade);
             showAlert(response.message, 'success');
             (el.querySelector('#trade-form') as HTMLFormElement).reset();
+            if(priceDisplay) priceDisplay.textContent = '';
+            props.onTradeSuccess(trade);
         } catch (error) {
             showAlert('Trade failed!', 'danger');
             console.error(error);

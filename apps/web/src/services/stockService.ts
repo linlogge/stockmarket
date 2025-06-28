@@ -58,6 +58,14 @@ class StockService {
         return await response.json();
     }
 
+    async getTransactions(): Promise<Trade[]> {
+        const response = await fetch('/api/transactions');
+        if (!response.ok) {
+            throw new Error('Failed to fetch transactions');
+        }
+        return await response.json();
+    }
+
     async submitTrade(trade: Trade) {
         const response = await fetch('/api/trade', {
             method: 'POST',

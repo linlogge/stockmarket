@@ -4,15 +4,22 @@ import { router } from "../main";
 const renderNavbar = (container: HTMLElement) => {
     const isLoggedIn = authService.isLoggedIn();
 
-    let authLink;
+    let authNav;
     if (isLoggedIn) {
-        authLink = `
-            <li class="nav-item">
-                <button id="logout-button" class="btn btn-link nav-link">Logout</button>
+        authNav = `
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/settings" data-link>Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button id="logout-button" class="dropdown-item">Logout</button></li>
+                </ul>
             </li>
         `;
     } else {
-        authLink = `
+        authNav = `
             <li class="nav-item">
                 <a class="nav-link" href="/login" data-link>Login</a>
             </li>
@@ -33,7 +40,7 @@ const renderNavbar = (container: HTMLElement) => {
                         </li>
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        ${authLink}
+                        ${authNav}
                     </ul>
                 </div>
             </div>
