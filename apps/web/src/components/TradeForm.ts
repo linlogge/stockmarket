@@ -10,7 +10,8 @@ export const TradeForm = () => {
                 <form id="trade-form">
                     <div class="mb-3">
                         <label for="symbol" class="form-label">Symbol</label>
-                        <input type="text" class="form-control" id="symbol" placeholder="e.g., AAPL" required>
+                        <input class="form-control" list="symbol-options" id="symbol" placeholder="Type to search..." required>
+                        <datalist id="symbol-options"></datalist>
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
@@ -28,6 +29,20 @@ export const TradeForm = () => {
             </div>
         </div>
     `;
+
+    const symbolDatalist = el.querySelector('#symbol-options');
+    if (symbolDatalist) {
+        stockService.getAvailableStocks().then(stocks => {
+            stocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = `${stock.symbol} - ${stock.company}`;
+                symbolDatalist.appendChild(option);
+            });
+        }).catch(error => {
+            console.error("Failed to load stocks for trading form", error);
+            showAlert('Failed to load stock list.', 'danger');
+        });
+    }
 
     const showAlert = (message: string, type: 'success' | 'danger') => {
         const alertContainer = el.querySelector('#trade-alert-container');
@@ -49,9 +64,17 @@ export const TradeForm = () => {
         const quantityInput = el.querySelector('#quantity') as HTMLInputElement;
         const actionInput = el.querySelector('#action') as HTMLSelectElement;
 
+        // Extract symbol from "SYMBOL - Company Name"
+        const symbol = symbolInput.value.split(' - ')[0];
+
+        if (!symbol) {
+            showAlert('Please select a valid stock.', 'danger');
+            return;
+        }
+
         try {
             const response = await stockService.submitTrade({
-                symbol: symbolInput.value,
+                symbol: symbol,
                 quantity: parseInt(quantityInput.value, 10),
                 action: actionInput.value
             });

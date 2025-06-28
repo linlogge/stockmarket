@@ -15,5 +15,5 @@ export const tradeView = () => {
         formContainer.appendChild(TradeForm());
     }
 
-    return el;
+    return { element: el, cleanup: undefined };
 }; 

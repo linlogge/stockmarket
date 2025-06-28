@@ -2,6 +2,7 @@ import { DashboardHeader } from '../components/DashboardHeader';
 import { PortfolioChart } from '../components/PortfolioChart';
 import { PositionsTable } from '../components/PositionsTable';
 import { SummaryCard } from '../components/SummaryCard';
+import { stockService } from '../services/stockService';
 
 export const dashboardView = () => {
     const el = document.createElement('div');
@@ -10,27 +11,52 @@ export const dashboardView = () => {
 
     const summaryRow = document.createElement('div');
     summaryRow.className = 'row';
-    summaryRow.appendChild(SummaryCard({
+
+    const portfolioCard = SummaryCard({
         title: 'Portfolio Value',
-        value: '$125,364.21',
-        change: '$1,203.45 (1.8%)',
-        changeDirection: 'up'
-    }));
-    summaryRow.appendChild(SummaryCard({
+        value: '$0.00'
+    });
+    const dailyGainCard = SummaryCard({
         title: "Day's Gain/Loss",
-        value: '-$543.87',
-        change: '-0.43%',
-        changeDirection: 'down'
-    }));
-    summaryRow.appendChild(SummaryCard({
+        value: '$0.00'
+    });
+    const cashCard = SummaryCard({
         title: 'Account Cash',
         value: '$15,832.10',
         footerText: 'Ready to invest'
-    }));
+    });
+
+    summaryRow.appendChild(portfolioCard.element);
+    summaryRow.appendChild(dailyGainCard.element);
+    summaryRow.appendChild(cashCard.element);
     el.appendChild(summaryRow);
+
     el.appendChild(PortfolioChart());
     el.appendChild(PositionsTable());
 
+    const updateSummary = async () => {
+        try {
+            const summary = await stockService.getPortfolioSummary();
+            portfolioCard.update({ value: `$${summary.portfolio_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` });
 
-    return el;
+            const gain = summary.days_gain;
+            const gainPercent = summary.days_gain_percent * 100;
+            dailyGainCard.update({
+                value: `${gain < 0 ? '-' : ''}$${Math.abs(gain).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                change: `${gainPercent.toFixed(2)}%`,
+                changeDirection: gain >= 0 ? 'up' : 'down'
+            });
+        } catch (error) {
+            console.error("Failed to update portfolio summary", error);
+        }
+    };
+
+    updateSummary();
+    const pollingInterval = setInterval(updateSummary, 1000);
+
+    const cleanup = () => {
+        clearInterval(pollingInterval);
+    };
+
+    return { element: el, cleanup };
 }; 

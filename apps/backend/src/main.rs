@@ -2,6 +2,7 @@ use axum::{routing::{get, post}, Json, Router};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
+use rand::Rng;
 
 #[tokio::main]
 async fn main() {
@@ -10,12 +11,55 @@ async fn main() {
     let app = Router::new()
         .route("/api/portfolio/history", get(portfolio_history))
         .route("/api/trade", post(handle_trade))
+        .route("/api/stocks", get(get_available_stocks))
+        .route("/api/portfolio/summary", get(get_portfolio_summary))
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn get_portfolio_summary() -> Json<PortfolioSummary> {
+    let mut rng = rand::thread_rng();
+    let base_value = 125364.21;
+    let value_fluctuation = rng.gen_range(-500.0..500.0);
+    let day_gain_fluctuation = rng.gen_range(-100.0..100.0);
+
+    let summary = PortfolioSummary {
+        portfolio_value: base_value + value_fluctuation,
+        days_gain: -543.87 + day_gain_fluctuation,
+        days_gain_percent: (-543.87 + day_gain_fluctuation) / base_value,
+    };
+
+    Json(summary)
+}
+
+async fn get_available_stocks() -> Json<Vec<Stock>> {
+    let stocks = vec![
+        Stock {
+            symbol: "AAPL".to_string(),
+            company: "Apple Inc.".to_string(),
+        },
+        Stock {
+            symbol: "GOOGL".to_string(),
+            company: "Alphabet Inc.".to_string(),
+        },
+        Stock {
+            symbol: "MSFT".to_string(),
+            company: "Microsoft Corp.".to_string(),
+        },
+        Stock {
+            symbol: "TSLA".to_string(),
+            company: "Tesla, Inc.".to_string(),
+        },
+        Stock {
+            symbol: "AMZN".to_string(),
+            company: "Amazon.com, Inc.".to_string(),
+        },
+    ];
+    Json(stocks)
 }
 
 async fn portfolio_history() -> Json<PortfolioHistory> {
@@ -38,7 +82,6 @@ async fn portfolio_history() -> Json<PortfolioHistory> {
 
 async fn handle_trade(Json(payload): Json<Trade>) -> Json<TradeResponse> {
     println!("Received trade: {:?}", payload);
-    // In a real app, you would process the trade here
     let response = TradeResponse {
         message: format!("Trade for {} {} {} successful!", payload.action, payload.quantity, payload.symbol),
     };
@@ -61,4 +104,17 @@ struct Trade {
 #[derive(Serialize)]
 struct TradeResponse {
     message: String,
+}
+
+#[derive(Serialize)]
+struct Stock {
+    symbol: String,
+    company: String,
+}
+
+#[derive(Serialize)]
+struct PortfolioSummary {
+    portfolio_value: f64,
+    days_gain: f64,
+    days_gain_percent: f64,
 }

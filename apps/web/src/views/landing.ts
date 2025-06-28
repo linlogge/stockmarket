@@ -11,5 +11,5 @@ export const landingView = () => {
             </div>
         </div>
     `;
-    return el;
+    return { element: el, cleanup: undefined };
 }; 

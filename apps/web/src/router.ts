@@ -1,18 +1,24 @@
 interface Route {
   path: string;
-  view: () => HTMLElement;
+  view: () => View;
+}
+
+interface View {
+    element: HTMLElement;
+    cleanup?: () => void;
 }
 
 export class Router {
   private routes: Route[] = [];
   private rootElement: HTMLElement;
+  private currentViewCleanup?: () => void;
 
   constructor(rootElement: HTMLElement) {
     this.rootElement = rootElement;
     window.addEventListener('popstate', this.handlePopState.bind(this));
   }
 
-  addRoute(path: string, view: () => HTMLElement) {
+  addRoute(path: string, view: Route['view']) {
     this.routes.push({ path, view });
     return this;
   }
@@ -25,14 +31,21 @@ export class Router {
   }
 
   private handleRouteChange() {
+    if (this.currentViewCleanup) {
+        this.currentViewCleanup();
+    }
+
     const path = window.location.pathname;
     const matchedRoute = this.matchRoute(path);
 
     if (matchedRoute) {
+      const { element, cleanup } = matchedRoute.view();
       this.rootElement.innerHTML = '';
-      this.rootElement.appendChild(matchedRoute.view());
+      this.rootElement.appendChild(element);
+      this.currentViewCleanup = cleanup;
     } else {
         this.rootElement.innerHTML = '<h1>404 - Not Found</h1>';
+        this.currentViewCleanup = undefined;
     }
   }
 
