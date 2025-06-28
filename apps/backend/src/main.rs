@@ -25,12 +25,12 @@ async fn get_portfolio_summary() -> Json<PortfolioSummary> {
     let mut rng = rand::thread_rng();
     let base_value = 125364.21;
     let value_fluctuation = rng.gen_range(-500.0..500.0);
-    let day_gain_fluctuation = rng.gen_range(-100.0..100.0);
+    let days_gain = rng.gen_range(-550.0..550.0);
 
     let summary = PortfolioSummary {
         portfolio_value: base_value + value_fluctuation,
-        days_gain: -543.87 + day_gain_fluctuation,
-        days_gain_percent: (-543.87 + day_gain_fluctuation) / base_value,
+        days_gain,
+        days_gain_percent: days_gain / base_value,
     };
 
     Json(summary)
