@@ -14,6 +14,11 @@ export interface Stock {
     company: string;
 }
 
+export interface StockPrice {
+    symbol: string;
+    price: number;
+}
+
 export interface PortfolioSummary {
     portfolio_value: number;
     days_gain: number;
@@ -41,6 +46,14 @@ class StockService {
         const response = await fetch('/api/stocks');
         if (!response.ok) {
             throw new Error('Failed to fetch available stocks');
+        }
+        return await response.json();
+    }
+
+    async getStockPrice(symbol: string): Promise<StockPrice> {
+        const response = await fetch(`/api/stocks/${symbol}/price`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch price for ${symbol}`);
         }
         return await response.json();
     }

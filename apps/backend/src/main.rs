@@ -1,4 +1,8 @@
-use axum::{routing::{get, post}, Json, Router};
+use axum::{
+    extract::Path,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
@@ -12,6 +16,7 @@ async fn main() {
         .route("/api/portfolio/history", get(portfolio_history))
         .route("/api/trade", post(handle_trade))
         .route("/api/stocks", get(get_available_stocks))
+        .route("/api/stocks/:symbol/price", get(get_stock_price))
         .route("/api/portfolio/summary", get(get_portfolio_summary))
         .layer(cors);
 
@@ -19,6 +24,22 @@ async fn main() {
     println!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn get_stock_price(Path(symbol): Path<String>) -> Json<StockPrice> {
+    let mut rng = rand::thread_rng();
+    let base_price = match symbol.as_str() {
+        "AAPL" => 162.0,
+        "GOOGL" => 125.0,
+        "MSFT" => 395.0,
+        "TSLA" => 168.0,
+        "AMZN" => 170.0,
+        _ => 100.0,
+    };
+
+    let price = base_price + rng.gen_range(-5.0..5.0);
+
+    Json(StockPrice { symbol, price })
 }
 
 async fn get_portfolio_summary() -> Json<PortfolioSummary> {
@@ -110,6 +131,12 @@ struct TradeResponse {
 struct Stock {
     symbol: String,
     company: String,
+}
+
+#[derive(Serialize)]
+struct StockPrice {
+    symbol: String,
+    price: f64,
 }
 
 #[derive(Serialize)]

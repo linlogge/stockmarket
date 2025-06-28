@@ -12,6 +12,7 @@ export const TradeForm = () => {
                         <label for="symbol" class="form-label">Symbol</label>
                         <input class="form-control" list="symbol-options" id="symbol" placeholder="Type to search..." required>
                         <datalist id="symbol-options"></datalist>
+                        <div id="price-display" class="form-text mt-2"></div>
                     </div>
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Quantity</label>
@@ -30,7 +31,10 @@ export const TradeForm = () => {
         </div>
     `;
 
+    const symbolInput = el.querySelector('#symbol') as HTMLInputElement;
     const symbolDatalist = el.querySelector('#symbol-options');
+    const priceDisplay = el.querySelector('#price-display');
+
     if (symbolDatalist) {
         stockService.getAvailableStocks().then(stocks => {
             stocks.forEach(stock => {
@@ -43,6 +47,26 @@ export const TradeForm = () => {
             showAlert('Failed to load stock list.', 'danger');
         });
     }
+
+    symbolInput?.addEventListener('input', async () => {
+        const datalistOptions = el.querySelectorAll('#symbol-options option');
+        const validSymbols = Array.from(datalistOptions).map(opt => (opt as HTMLOptionElement).value);
+        const currentValue = symbolInput.value;
+
+        if (priceDisplay && validSymbols.includes(currentValue)) {
+            const symbol = currentValue.split(' - ')[0];
+            try {
+                priceDisplay.textContent = 'Fetching price...';
+                const stockPrice = await stockService.getStockPrice(symbol);
+                priceDisplay.textContent = `Current Price: ${stockPrice.price.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}`;
+            } catch (error) {
+                console.error(error);
+                priceDisplay.textContent = 'Could not fetch price.';
+            }
+        } else if (priceDisplay) {
+            priceDisplay.textContent = '';
+        }
+    });
 
     const showAlert = (message: string, type: 'success' | 'danger') => {
         const alertContainer = el.querySelector('#trade-alert-container');
