@@ -1,5 +1,6 @@
 export const landingView = () => {
     const el = document.createElement('div');
+    el.className = 'container mt-4';
     el.innerHTML = `
         <div class="p-5 mb-4 bg-light rounded-3">
             <div class="container-fluid py-5">

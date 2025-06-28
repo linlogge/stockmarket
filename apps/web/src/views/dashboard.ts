@@ -6,6 +6,7 @@ import { stockService } from '../services/stockService';
 
 export const dashboardView = () => {
     const el = document.createElement('div');
+    el.className = 'container mt-4';
 
     el.appendChild(DashboardHeader());
 
