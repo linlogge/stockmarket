@@ -3,16 +3,22 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use chrono::{Duration, Utc};
+use jsonwebtoken::{encode, EncodingKey, Header};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
-use rand::Rng;
+
+const JWT_SECRET: &[u8] = b"secret";
 
 #[tokio::main]
 async fn main() {
     let cors = CorsLayer::new().allow_origin(Any);
 
     let app = Router::new()
+        .route("/api/login", post(login))
+        .route("/api/logout", post(logout))
         .route("/api/portfolio/history", get(portfolio_history))
         .route("/api/trade", post(handle_trade))
         .route("/api/stocks", get(get_available_stocks))
@@ -24,6 +30,26 @@ async fn main() {
     println!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn login(Json(payload): Json<LoginPayload>) -> Result<Json<LoginResponse>, axum::http::StatusCode> {
+    if payload.email == "test@example.com" && payload.password == "password" {
+        let claims = Claims {
+            sub: payload.email,
+            exp: (Utc::now() + Duration::hours(1)).timestamp() as usize,
+        };
+
+        let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(JWT_SECRET))
+            .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
+
+        Ok(Json(LoginResponse { token }))
+    } else {
+        Err(axum::http::StatusCode::UNAUTHORIZED)
+    }
+}
+
+async fn logout() -> axum::http::StatusCode {
+    axum::http::StatusCode::OK
 }
 
 async fn get_stock_price(Path(symbol): Path<String>) -> Json<StockPrice> {
@@ -144,4 +170,21 @@ struct PortfolioSummary {
     portfolio_value: f64,
     days_gain: f64,
     days_gain_percent: f64,
+}
+
+#[derive(Deserialize)]
+struct LoginPayload {
+    email: String,
+    password: String,
+}
+
+#[derive(Serialize)]
+struct LoginResponse {
+    token: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String,
+    exp: usize,
 }

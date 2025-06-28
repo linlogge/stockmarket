@@ -1,6 +1,9 @@
+import { authService } from "./services/authService";
+
 interface Route {
   path: string;
   view: () => View;
+  isProtected: boolean;
 }
 
 interface View {
@@ -18,8 +21,8 @@ export class Router {
     window.addEventListener('popstate', this.handlePopState.bind(this));
   }
 
-  addRoute(path: string, view: Route['view']) {
-    this.routes.push({ path, view });
+  addRoute(path: string, view: Route['view'], isProtected: boolean = false) {
+    this.routes.push({ path, view, isProtected });
     return this;
   }
 
@@ -39,6 +42,11 @@ export class Router {
     const matchedRoute = this.matchRoute(path);
 
     if (matchedRoute) {
+        if (matchedRoute.isProtected && !authService.isLoggedIn()) {
+            this.navigate('/login');
+            return;
+        }
+
       const { element, cleanup } = matchedRoute.view();
       this.rootElement.innerHTML = '';
       this.rootElement.appendChild(element);
