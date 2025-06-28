@@ -14,15 +14,15 @@ export const dashboardView = () => {
 
     const portfolioCard = SummaryCard({
         title: 'Portfolio Value',
-        value: '$0.00'
+        value: '€0.00'
     });
     const dailyGainCard = SummaryCard({
         title: "Day's Gain/Loss",
-        value: '$0.00'
+        value: '€0.00'
     });
     const cashCard = SummaryCard({
         title: 'Account Cash',
-        value: '$15,832.10',
+        value: '€15,832.10',
         footerText: 'Ready to invest'
     });
 
@@ -37,13 +37,13 @@ export const dashboardView = () => {
     const updateSummary = async () => {
         try {
             const summary = await stockService.getPortfolioSummary();
-            portfolioCard.update({ value: `$${summary.portfolio_value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` });
+            portfolioCard.update({ value: `${summary.portfolio_value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}` });
 
             const gain = summary.days_gain;
             const gainPercent = summary.days_gain_percent * 100;
             dailyGainCard.update({
-                value: `${gain < 0 ? '-' : ''}$${Math.abs(gain).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                change: `${gainPercent.toFixed(2)}%`,
+                value: `${gain.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}`,
+                change: `${gainPercent.toFixed(2)}%`.replace('.',','),
                 changeDirection: gain >= 0 ? 'up' : 'down'
             });
         } catch (error) {
