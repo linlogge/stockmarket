@@ -2,6 +2,7 @@ import "./scss/styles.scss";
 import { Router } from './router.ts';
 import { landingView } from "./views/landing.ts";
 import { dashboardView } from "./views/dashboard.ts";
+import { tradeView } from './views/trade.ts';
 import 'bootstrap';
 
 import { Tooltip } from 'bootstrap';
@@ -23,4 +24,5 @@ const router = new Router(appElement);
 router
     .addRoute('/', landingView)
     .addRoute('/dashboard', dashboardView)
+    .addRoute('/trade', tradeView)
     .start();

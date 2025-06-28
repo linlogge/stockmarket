@@ -1,5 +1,5 @@
-use axum::{routing::get, Json, Router};
-use serde::Serialize;
+use axum::{routing::{get, post}, Json, Router};
+use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 
@@ -9,6 +9,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/portfolio/history", get(portfolio_history))
+        .route("/api/trade", post(handle_trade))
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -35,8 +36,29 @@ async fn portfolio_history() -> Json<PortfolioHistory> {
     Json(history)
 }
 
+async fn handle_trade(Json(payload): Json<Trade>) -> Json<TradeResponse> {
+    println!("Received trade: {:?}", payload);
+    // In a real app, you would process the trade here
+    let response = TradeResponse {
+        message: format!("Trade for {} {} {} successful!", payload.action, payload.quantity, payload.symbol),
+    };
+    Json(response)
+}
+
 #[derive(Serialize)]
 struct PortfolioHistory {
     labels: Vec<String>,
     data: Vec<f64>,
+}
+
+#[derive(Deserialize, Debug)]
+struct Trade {
+    symbol: String,
+    quantity: u32,
+    action: String,
+}
+
+#[derive(Serialize)]
+struct TradeResponse {
+    message: String,
 }
