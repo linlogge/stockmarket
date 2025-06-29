@@ -1,54 +1,77 @@
-# Stockmarket Frontend Programming
+# StockMarket Application
+
+This is a full-stack stock market simulation application featuring a modern frontend and a robust backend. It is designed as a monorepo, containing the web app and the API server within the `apps` directory.
+
+## Features
+
+- **Real-time Dashboard**: A dynamic dashboard that polls the backend every second to display live portfolio value and daily gains/losses.
+- **Client-Side Routing**: A lightweight, custom-built SPA router with support for protected routes.
+- **User Authentication**: JWT-based login system. Authenticated routes are protected, redirecting unauthorized users to a login page.
+- **Interactive Trading**: A dedicated view for trading stocks, with a searchable input that fetches and displays live prices.
+- **Transaction History**: A persistent, server-side transaction history that updates in real-time on the frontend after a trade is made.
+- **Modern UI**: A responsive and clean user interface built with Bootstrap, featuring a sticky header and footer.
+
+## Tech Stack
+
+| Area      | Technology                                    |
+|-----------|-----------------------------------------------|
+| **Frontend**  | TypeScript, Vite, Bootstrap, SASS, Chart.js   |
+| **Backend**   | Rust, Axum, Tokio, Serde, JSON Web Tokens     |
+
+## Project Structure
+
+The project is organized as a monorepo:
+
+```
+.
+├── apps/
+│   ├── backend/  # Rust/Axum backend server
+│   └── web/      # TypeScript/Vite frontend SPA
+├── docs/
+│   ├── backend/
+│   └── frontend/ # Detailed technical documentation
+```
+
+For detailed technical documentation, please see the `docs` directory.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Rust (latest stable)
-- Flutter SDK (version ^3.6.0)
-- Node.js (LTS version)
-- PNPM
+-   **Rust** (latest stable version)
+-   **Node.js** (LTS version)
+-   **PNPM** (v10 or later)
 
-### Installation & Setup
+### Installation
 
-1. Clone this repository
-2. Navigate to the project root directory
+1.  Clone this repository to your local machine.
+2.  Navigate to the project root directory.
+3.  Install all dependencies for the monorepo:
+    ```sh
+    pnpm install
+    ```
 
-### Flutter Mobile App
+## Running the Application
 
-To run the mobile app:
+You will need to run the backend and frontend in two separate terminals.
 
-1. Open the project in VS Code
-2. Select "Run Mobile App (Debug)" from the Run/Debug configurations
-3. Press F5 or click the Run button
+### 1. Run the Backend Server
 
-For release mode:
-- Select "Run Mobile App (Release)" configuration instead
+From the project root, run:
 
-### Rust Backend
+```sh
+cargo run -p stockmarket-backend
+```
 
-To run the Rust backend:
+The backend server will start and listen on `http://127.0.0.1:3000`.
 
-1. Start the server in development mode:
-   ```sh
-   cargo run -p stockmarket-backend
-   ```
+### 2. Run the Frontend App
 
-The backend server will start and listen for incoming connections.
+From the project root, run:
 
-### Web Frontend
+```sh
+pnpm --filter=stockmarket-web dev
+```
 
-To run the web frontend:
-
-1. Install dependencies:
-   ```sh
-   pnpm install
-   ```
-
-2. Start the development server:
-   ```sh
-   pnpm --filter=stockmarket-web dev
-   ```
-
-The web app will be available at http://localhost:3000
+The web app will be available at `http://localhost:5173` (or the next available port). The Vite server is configured to proxy API requests to the backend.
 
