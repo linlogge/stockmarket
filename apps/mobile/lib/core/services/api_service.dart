@@ -6,6 +6,13 @@ import 'package:stockmarket/models/portfolio_history.dart';
 import 'package:stockmarket/models/portfolio_summary.dart';
 import 'package:stockmarket/models/stock.dart';
 import 'package:stockmarket/models/trade.dart';
+import 'package:stockmarket/models/position.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final apiServiceProvider = Provider<ApiService>((ref) {
+  final authService = ref.watch(authServiceProvider);
+  return ApiService(authService);
+});
 
 class ApiService {
   final AuthService _authService;
@@ -77,4 +84,49 @@ class ApiService {
       throw Exception('Failed to submit trade');
     }
   }
-} 
+
+  Future<List<Trade>> getTransactions() async {
+    final headers = await _getHeaders();
+    final response =
+        await http.get(Uri.parse('$_baseUrl/transactions'), headers: headers);
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Trade.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load transactions');
+    }
+  }
+
+  Future<List<Position>> getPositions() async {
+    final token = await _authService.getToken();
+    final response = await http.get(
+      Uri.parse('$_baseUrl/portfolio/positions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Position.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load positions');
+    }
+  }
+}
+
+final positionsProvider = FutureProvider<List<Position>>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return apiService.getPositions();
+});
+
+final portfolioHistoryProvider = FutureProvider((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return apiService.getPortfolioHistory();
+});
+
+final portfolioSummaryProvider = StreamProvider((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return Stream.periodic(const Duration(seconds: 2))
+      .asyncMap((_) => apiService.getPortfolioSummary());
+}); 

@@ -41,6 +41,7 @@ async fn main() {
         .route("/api/login", post(login))
         .route("/api/logout", post(logout))
         .route("/api/portfolio/history", get(portfolio_history))
+        .route("/api/portfolio/positions", get(get_portfolio_positions))
         .route("/api/trade", post(handle_trade))
         .route("/api/transactions", get(get_transactions))
         .route("/api/stocks", get(get_available_stocks))
@@ -110,8 +111,8 @@ async fn get_portfolio_summary() -> Json<PortfolioSummary> {
     Json(summary)
 }
 
-async fn get_available_stocks() -> Json<Vec<Stock>> {
-    let stocks = vec![
+fn get_all_stocks_data() -> Vec<Stock> {
+    vec![
         Stock {
             symbol: "AAPL".to_string(),
             company: "Apple Inc.".to_string(),
@@ -132,8 +133,11 @@ async fn get_available_stocks() -> Json<Vec<Stock>> {
             symbol: "AMZN".to_string(),
             company: "Amazon.com, Inc.".to_string(),
         },
-    ];
-    Json(stocks)
+    ]
+}
+
+async fn get_available_stocks() -> Json<Vec<Stock>> {
+    Json(get_all_stocks_data())
 }
 
 #[axum::debug_handler]
@@ -177,6 +181,55 @@ async fn get_transactions(State(state): State<AppState>) -> Json<Vec<Trade>> {
     Json(transactions)
 }
 
+#[axum::debug_handler]
+async fn get_portfolio_positions(State(state): State<AppState>) -> Json<Vec<Position>> {
+    let transactions = state.transactions.lock();
+    let mut positions_map = std::collections::HashMap::new();
+
+    for trade in transactions.iter() {
+        let entry = positions_map.entry(trade.symbol.clone()).or_insert(0i64);
+        if trade.action == "buy" {
+            *entry += trade.quantity as i64;
+        } else {
+            *entry -= trade.quantity as i64;
+        }
+    }
+
+    let all_stocks = get_all_stocks_data();
+    let mut positions: Vec<Position> = Vec::new();
+    let mut rng = rand::thread_rng();
+
+    for (symbol, shares) in positions_map.into_iter().filter(|&(_, shares)| shares > 0) {
+        if let Some(stock_info) = all_stocks.iter().find(|s| s.symbol == symbol) {
+            let base_price = match symbol.as_str() {
+                "AAPL" => 162.0,
+                "GOOGL" => 125.0,
+                "MSFT" => 395.0,
+                "TSLA" => 168.0,
+                "AMZN" => 170.0,
+                _ => 100.0,
+            };
+
+            let price: f64 = base_price + rng.gen_range(-5.0..5.0);
+            let change: f64 = rng.gen_range(-2.0..2.0);
+            let change_percent = if price.abs() > 0.0 { (change / price) * 100.0 } else { 0.0 };
+            let value = price * shares as f64;
+
+            positions.push(Position {
+                symbol: symbol.clone(),
+                company: stock_info.company.clone(),
+                shares: shares as u32,
+                price,
+                change,
+                change_percent,
+                value,
+            });
+        }
+    }
+
+    Json(positions)
+}
+
 #[derive(Serialize)]
 struct PortfolioHistory {
     labels: Vec<String>,
@@ -196,6 +249,17 @@ struct TradeResponse {
 }
 
 #[derive(Serialize)]
+struct Position {
+    symbol: String,
+    company: String,
+    shares: u32,
+    price: f64,
+    change: f64,
+    change_percent: f64,
+    value: f64,
+}
+
+#[derive(Serialize, Clone)]
 struct Stock {
     symbol: String,
     company: String,

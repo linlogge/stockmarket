@@ -12,4 +12,12 @@ class Trade {
       'action': action,
     };
   }
+
+  factory Trade.fromJson(Map<String, dynamic> json) {
+    return Trade(
+      symbol: json['symbol'],
+      quantity: json['quantity'],
+      action: json['action'],
+    );
+  }
 } 
