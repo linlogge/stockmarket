@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stockmarket/core/services/api_service.dart';
+import 'package:stockmarket/core/services/auth_service.dart';
 import 'package:stockmarket/models/portfolio_history.dart';
 import 'package:stockmarket/models/portfolio_summary.dart';
 import 'package:stockmarket/models/stock.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
+  final authService = ref.watch(authServiceProvider);
+  return ApiService(authService);
 });
 
 final availableStocksProvider = FutureProvider<List<Stock>>((ref) {

@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 const JWT_SECRET: &[u8] = b"secret";
 
@@ -21,6 +23,14 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "stockmarket_backend=info,tower_http=info".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let app_state = AppState {
         transactions: Arc::new(Mutex::new(vec![])),
     };
@@ -37,10 +47,11 @@ async fn main() {
         .route("/api/stocks/:symbol/price", get(get_stock_price))
         .route("/api/portfolio/summary", get(get_portfolio_summary))
         .layer(cors)
+        .layer(TraceLayer::new_for_http())
         .with_state(app_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    tracing::info!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
@@ -53,7 +64,10 @@ async fn login(Json(payload): Json<LoginPayload>) -> Result<Json<LoginResponse>,
         };
 
         let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(JWT_SECRET))
-            .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
+            .map_err(|e| {
+                tracing::error!("Failed to create token: {}", e);
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR
+            })?;
 
         Ok(Json(LoginResponse { token }))
     } else {
@@ -146,7 +160,7 @@ async fn handle_trade(
     State(state): State<AppState>,
     Json(payload): Json<Trade>,
 ) -> Json<TradeResponse> {
-    println!("Received trade: {:?}", payload);
+    tracing::info!(trade = ?payload, "Received new trade");
     state.transactions.lock().push(payload.clone());
     let response = TradeResponse {
         message: format!(

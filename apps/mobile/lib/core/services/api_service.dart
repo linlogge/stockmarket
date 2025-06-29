@@ -1,35 +1,51 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:stockmarket/core/constants.dart';
+import 'package:stockmarket/core/services/auth_service.dart';
 import 'package:stockmarket/models/portfolio_history.dart';
 import 'package:stockmarket/models/portfolio_summary.dart';
 import 'package:stockmarket/models/stock.dart';
 import 'package:stockmarket/models/trade.dart';
 
 class ApiService {
-  final String _baseUrl = 'http://127.0.0.1:3000/api';
+  final AuthService _authService;
+  final String _baseUrl = API_BASE_URL;
+
+  ApiService(this._authService);
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _authService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   Future<PortfolioSummary> getPortfolioSummary() async {
-    final response = await http.get(Uri.parse('$_baseUrl/portfolio/summary'));
-
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$_baseUrl/portfolio/summary'), headers: headers);
     if (response.statusCode == 200) {
-      return PortfolioSummary.fromJson(jsonDecode(response.body));
+      final data = jsonDecode(response.body);
+      return PortfolioSummary.fromJson(data);
     } else {
       throw Exception('Failed to load portfolio summary');
     }
   }
 
   Future<PortfolioHistory> getPortfolioHistory() async {
-    final response = await http.get(Uri.parse('$_baseUrl/portfolio/history'));
-
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$_baseUrl/portfolio/history'), headers: headers);
     if (response.statusCode == 200) {
-      return PortfolioHistory.fromJson(jsonDecode(response.body));
+      final data = jsonDecode(response.body);
+      return PortfolioHistory.fromJson(data);
     } else {
       throw Exception('Failed to load portfolio history');
     }
   }
 
   Future<List<Stock>> getAvailableStocks() async {
-    final response = await http.get(Uri.parse('$_baseUrl/stocks'));
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$_baseUrl/stocks'), headers: headers);
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Stock.fromJson(json)).toList();
@@ -39,7 +55,8 @@ class ApiService {
   }
 
   Future<double> getStockPrice(String symbol) async {
-    final response = await http.get(Uri.parse('$_baseUrl/stocks/$symbol/price'));
+    final headers = await _getHeaders();
+    final response = await http.get(Uri.parse('$_baseUrl/stocks/$symbol/price'), headers: headers);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return (data['price'] as num).toDouble();
@@ -49,9 +66,10 @@ class ApiService {
   }
 
   Future<void> submitTrade(Trade trade) async {
+    final headers = await _getHeaders();
     final response = await http.post(
       Uri.parse('$_baseUrl/trade'),
-      headers: {'Content-Type': 'application/json'},
+      headers: headers,
       body: jsonEncode(trade.toJson()),
     );
 
