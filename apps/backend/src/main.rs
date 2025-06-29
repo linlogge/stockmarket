@@ -75,6 +75,55 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
+fn calculate_current_positions(state: &AppState) -> Vec<Position> {
+    let transactions = state.transactions.lock();
+    let mut positions_map = std::collections::HashMap::new();
+
+    for trade in transactions.iter() {
+        let entry = positions_map.entry(trade.symbol.clone()).or_insert(0i64);
+        if trade.action == "buy" {
+            *entry += trade.quantity as i64;
+        } else {
+            *entry -= trade.quantity as i64;
+        }
+    }
+
+    let all_stocks = get_all_stocks_data();
+    let mut positions: Vec<Position> = Vec::new();
+    let mut rng = rand::thread_rng();
+
+    for (symbol, shares) in positions_map.into_iter().filter(|&(_, shares)| shares > 0) {
+        if let Some(stock_info) = all_stocks.iter().find(|s| s.symbol == symbol) {
+            let base_price = match symbol.as_str() {
+                "AAPL" => 162.0,
+                "GOOGL" => 125.0,
+                "MSFT" => 395.0,
+                "TSLA" => 168.0,
+                "AMZN" => 170.0,
+                _ => 100.0,
+            };
+
+            let price: f64 = base_price + rng.gen_range(-5.0..5.0);
+            let change: f64 = rng.gen_range(-2.0..2.0);
+            let change_percent = if price.abs() > 0.0 { (change / price) * 100.0 } else { 0.0 };
+            let value = price * shares as f64;
+            let previous_day_value = value - (change * shares as f64);
+
+            positions.push(Position {
+                symbol: symbol.clone(),
+                company: stock_info.company.clone(),
+                shares: shares as u32,
+                price,
+                change,
+                change_percent,
+                value,
+                previous_day_value,
+            });
+        }
+    }
+    positions
+}
+
 async fn login(Json(payload): Json<LoginPayload>) -> Result<Json<LoginResponse>, axum::http::StatusCode> {
     if payload.email == "test@example.com" && payload.password == "password" {
         let claims = Claims {
@@ -114,16 +163,23 @@ async fn get_stock_price(Path(symbol): Path<String>) -> Json<StockPrice> {
     Json(StockPrice { symbol, price })
 }
 
-async fn get_portfolio_summary() -> Json<PortfolioSummary> {
-    let mut rng = rand::thread_rng();
-    let base_value = 125364.21;
-    let value_fluctuation = rng.gen_range(-500.0..500.0);
-    let days_gain = rng.gen_range(-550.0..550.0);
+async fn get_portfolio_summary(State(state): State<AppState>) -> Json<PortfolioSummary> {
+    let positions = calculate_current_positions(&state);
+
+    let portfolio_value: f64 = positions.iter().map(|p| p.value).sum();
+    let total_previous_day_value: f64 = positions.iter().map(|p| p.previous_day_value).sum();
+    let days_gain = portfolio_value - total_previous_day_value;
+    
+    let days_gain_percent = if total_previous_day_value.abs() > 1e-9 {
+        (days_gain / total_previous_day_value)
+    } else {
+        0.0
+    };
 
     let summary = PortfolioSummary {
-        portfolio_value: base_value + value_fluctuation,
+        portfolio_value,
         days_gain,
-        days_gain_percent: days_gain / base_value,
+        days_gain_percent,
     };
 
     Json(summary)
@@ -201,50 +257,7 @@ async fn get_transactions(State(state): State<AppState>) -> Json<Vec<Trade>> {
 
 #[axum::debug_handler]
 async fn get_portfolio_positions(State(state): State<AppState>) -> Json<Vec<Position>> {
-    let transactions = state.transactions.lock();
-    let mut positions_map = std::collections::HashMap::new();
-
-    for trade in transactions.iter() {
-        let entry = positions_map.entry(trade.symbol.clone()).or_insert(0i64);
-        if trade.action == "buy" {
-            *entry += trade.quantity as i64;
-        } else {
-            *entry -= trade.quantity as i64;
-        }
-    }
-
-    let all_stocks = get_all_stocks_data();
-    let mut positions: Vec<Position> = Vec::new();
-    let mut rng = rand::thread_rng();
-
-    for (symbol, shares) in positions_map.into_iter().filter(|&(_, shares)| shares > 0) {
-        if let Some(stock_info) = all_stocks.iter().find(|s| s.symbol == symbol) {
-            let base_price = match symbol.as_str() {
-                "AAPL" => 162.0,
-                "GOOGL" => 125.0,
-                "MSFT" => 395.0,
-                "TSLA" => 168.0,
-                "AMZN" => 170.0,
-                _ => 100.0,
-            };
-
-            let price: f64 = base_price + rng.gen_range(-5.0..5.0);
-            let change: f64 = rng.gen_range(-2.0..2.0);
-            let change_percent = if price.abs() > 0.0 { (change / price) * 100.0 } else { 0.0 };
-            let value = price * shares as f64;
-
-            positions.push(Position {
-                symbol: symbol.clone(),
-                company: stock_info.company.clone(),
-                shares: shares as u32,
-                price,
-                change,
-                change_percent,
-                value,
-            });
-        }
-    }
-
+    let positions = calculate_current_positions(&state);
     Json(positions)
 }
 
@@ -275,6 +288,7 @@ struct Position {
     change: f64,
     change_percent: f64,
     value: f64,
+    previous_day_value: f64,
 }
 
 #[derive(Serialize, Clone)]

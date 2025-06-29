@@ -127,6 +127,6 @@ final portfolioHistoryProvider = FutureProvider((ref) {
 
 final portfolioSummaryProvider = StreamProvider((ref) {
   final apiService = ref.watch(apiServiceProvider);
-  return Stream.periodic(const Duration(seconds: 2))
+  return Stream.periodic(const Duration(seconds: 1))
       .asyncMap((_) => apiService.getPortfolioSummary());
 }); 
