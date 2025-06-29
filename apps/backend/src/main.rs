@@ -31,8 +31,26 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let initial_transactions = vec![
+        Trade {
+            symbol: "AAPL".to_string(),
+            quantity: 10,
+            action: "buy".to_string(),
+        },
+        Trade {
+            symbol: "GOOGL".to_string(),
+            quantity: 5,
+            action: "buy".to_string(),
+        },
+        Trade {
+            symbol: "MSFT".to_string(),
+            quantity: 20,
+            action: "buy".to_string(),
+        },
+    ];
+
     let app_state = AppState {
-        transactions: Arc::new(Mutex::new(vec![])),
+        transactions: Arc::new(Mutex::new(initial_transactions)),
     };
 
     let cors = CorsLayer::new().allow_origin(Any);
