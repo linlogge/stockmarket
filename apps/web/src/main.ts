@@ -1,14 +1,16 @@
+import 'bootstrap';
 import "./scss/styles.scss";
+
+import { Tooltip } from 'bootstrap';
+
 import { Router } from './router.ts';
+
 import { landingView } from "./views/landing.ts";
 import { dashboardView } from "./views/dashboard.ts";
 import { tradeView } from './views/trade.ts';
 import { loginView } from './views/login.ts';
 import { settingsView } from './views/settings.ts';
-import 'bootstrap';
 import { Navbar } from "./components/Navbar.ts";
-
-import { Tooltip } from 'bootstrap';
 
 document.addEventListener('DOMContentLoaded', () => {
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
