@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stockmarket/core/services/api_service.dart';
+import 'package:stockmarket/models/portfolio_history.dart';
 import 'package:stockmarket/models/portfolio_summary.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
+});
+
+final portfolioHistoryProvider = FutureProvider<PortfolioHistory>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return apiService.getPortfolioHistory();
 });
 
 final portfolioSummaryProvider = StreamProvider.autoDispose<PortfolioSummary>((ref) {
