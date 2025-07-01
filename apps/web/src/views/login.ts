@@ -19,6 +19,7 @@ export const loginView = () => {
     const backToHome = document.createElement('a');
     backToHome.href = '/';
     backToHome.innerHTML = `${Arrow} Back to home`;
+    backToHome.dataset.link = 'true';
     backToHome.classList.add('btn', 'icon-link', 'text-decoration-none', 'text-muted', 'text-center', 'text-sm');
 
     logoContainerEl.appendChild(backToHome);

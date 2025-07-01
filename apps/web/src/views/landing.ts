@@ -22,7 +22,12 @@ export const landingView = () => {
     chartContainer.id = 'market-container';
     el.appendChild(chartContainer);
 
+    let intervalId: number;
+    let stocks: Stock[] = [];
+    let selectedStock: Stock | null = null;
+
     const renderStockChartCard = async (stock: Stock, price: number, diff: number) => {
+        selectedStock = stock;
         chartContainer.innerHTML = `<p>Loading chart for ${stock.symbol}...</p>`;
         try {
             const openPrice = price - diff;
@@ -44,54 +49,73 @@ export const landingView = () => {
         }
     };
 
-    const init = async () => {
+    const updatePrices = async () => {
         try {
-            const stocks = await stockService.getAvailableStocks();
-            if (stocks.length > 0) {
-                const symbols = stocks.map(s => s.symbol);
-                const priceData = await stockService.getStockPrice(symbols);
-                
-                const priceMap = new Map<string, {price: number, diff: number}>();
-                for (let i = 0; i < priceData.symbol.length; i++) {
-                    priceMap.set(priceData.symbol[i], {
-                        price: priceData.mid[i],
-                        diff: priceData.diff[i]
-                    });
+            if (stocks.length === 0) {
+                stocks = await stockService.getAvailableStocks();
+                if (stocks.length > 0 && !selectedStock) {
+                    selectedStock = stocks[0];
                 }
-
-                stockCardsContainer.innerHTML = '';
-                stocks.forEach(stock => {
-                    const stockPrice = priceMap.get(stock.symbol);
-                    if (stockPrice) {
-                        const stockCard = StockCard({
-                            icon: ICONS[stock.symbol] || ICONS['DEFAULT'],
-                            name: stock.company,
-                            price: stockPrice.price,
-                            diff: stockPrice.diff
-                        });
-                        stockCard.onclick = () => renderStockChartCard(stock, stockPrice.price, stockPrice.diff);
-                        stockCardsContainer.appendChild(stockCard);
-                    }
-                });
-                
-                const firstStock = stocks[0];
-                const firstStockPrice = priceMap.get(firstStock.symbol);
-                if (firstStockPrice) {
-                    renderStockChartCard(firstStock, firstStockPrice.price, firstStockPrice.diff);
-                }
-
-            } else {
-                chartContainer.innerHTML = `<p>No stocks available.</p>`;
             }
+            if (stocks.length === 0) {
+                chartContainer.innerHTML = `<p>No stocks available.</p>`;
+                return;
+            }
+
+            const symbols = stocks.map(s => s.symbol);
+            const priceData = await stockService.getStockPrice(symbols);
+            
+            const priceMap = new Map<string, {price: number, diff: number}>();
+            for (let i = 0; i < priceData.symbol.length; i++) {
+                priceMap.set(priceData.symbol[i], {
+                    price: priceData.mid[i],
+                    diff: priceData.diff[i]
+                });
+            }
+
+            stockCardsContainer.innerHTML = '';
+            stocks.forEach(stock => {
+                const stockPrice = priceMap.get(stock.symbol);
+                if (stockPrice) {
+                    const stockCard = StockCard({
+                        icon: ICONS[stock.symbol] || ICONS['DEFAULT'],
+                        name: stock.company,
+                        price: stockPrice.price,
+                        diff: stockPrice.diff
+                    });
+                    stockCard.onclick = () => renderStockChartCard(stock, stockPrice.price, stockPrice.diff);
+                    stockCardsContainer.appendChild(stockCard);
+                }
+            });
+            
+            if (selectedStock) {
+                const stockPrice = priceMap.get(selectedStock.symbol);
+                if (stockPrice) {
+                    renderStockChartCard(selectedStock, stockPrice.price, stockPrice.diff);
+                }
+            }
+
         } catch (error) {
             console.error('Failed to load available stocks', error);
-            chartContainer.innerHTML = `<p class="text-danger">Could not load available stocks.</p>`;
+            if (!stockCardsContainer.hasChildNodes()) {
+                chartContainer.innerHTML = `<p class="text-danger">Could not load available stocks.</p>`;
+            }
         }
+    };
+
+    const init = () => {
+        updatePrices();
+        intervalId = window.setInterval(updatePrices, 1000);
     };
 
     init();
 
+    const cleanup = () => {
+        clearInterval(intervalId);
+    };
+
     return {
         element: el,
+        cleanup,
     };
 };
