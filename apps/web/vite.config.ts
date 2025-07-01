@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
                 '~bootstrap-icons': path.resolve(__dirname, 'node_modules/bootstrap-icons'),
             }
         },
+        preview: {
+            allowedHosts: ['handsome-adventure-production.up.railway.app', 'stockmarket.sigmunczyk.de'],
+        },
         server: {
             proxy: {
                 '/api': {
