@@ -3,6 +3,13 @@
 use serde::{Deserialize, Serialize};
 use secrecy::Secret;
 use uuid::Uuid;
+use secrecy::SecretString;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Stock {
+    pub symbol: String,
+    pub company: String,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {

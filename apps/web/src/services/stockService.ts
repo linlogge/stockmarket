@@ -16,6 +16,16 @@ export interface Stock {
     company: string;
 }
 
+export interface PricePoint {
+    time: number;
+    price: number;
+}
+
+export interface PriceInfo {
+    price: number;
+    diff: number;
+}
+
 export interface StockPriceResponse {
     symbol: string[];
     mid: number[];
@@ -71,9 +81,7 @@ class StockService {
     }
 
     async getAvailableStocks(): Promise<Stock[]> {
-        const response = await fetch('/api/stocks', {
-            headers: this.getAuthHeaders(),
-        });
+        const response = await fetch('/api/emulate?locale=en-US');
         if (!response.ok) {
             throw new Error('Failed to fetch available stocks');
         }
@@ -83,57 +91,72 @@ class StockService {
     async getCandles(symbol: string, resolution: "1D" | "1W" | "1M" | "1Y" | "5Y"): Promise<CandleResponse> {
         const to = new Date();
         const from = new Date();
-        let apiResolution: 'H' | 'D' | 'W' = 'D';
 
         switch (resolution) {
             case '1D':
                 from.setDate(to.getDate() - 1);
-                apiResolution = 'H';
                 break;
             case '1W':
                 from.setDate(to.getDate() - 7);
-                apiResolution = 'H';
                 break;
             case '1M':
                 from.setMonth(to.getMonth() - 1);
-                apiResolution = 'D';
                 break;
             case '1Y':
                 from.setFullYear(to.getFullYear() - 1);
-                apiResolution = 'D';
                 break;
             case '5Y':
                 from.setFullYear(to.getFullYear() - 5);
-                apiResolution = 'W';
                 break;
         }
 
         const toTimestamp = Math.floor(to.getTime() / 1000);
         const fromTimestamp = Math.floor(from.getTime() / 1000);
         
-        const params = new URLSearchParams();
-        params.append('from', fromTimestamp.toString());
-        params.append('to', toTimestamp.toString());
-        const queryString = params.toString();
-
-        const response = await fetch(`/api/marketdata/stocks/candles/${apiResolution}/${symbol}?${queryString}`, {
-            headers: this.getAuthHeaders(),
+        const params = new URLSearchParams({
+            from: fromTimestamp.toString(),
+            to: toTimestamp.toString(),
         });
+
+        const response = await fetch(`/api/emulate/${symbol}/history?${params.toString()}`);
+
         if (!response.ok) {
             throw new Error(`Failed to fetch candles for ${symbol}`);
         }
-        return await response.json();
+        
+        const history: PricePoint[] = await response.json();
+        
+        return {
+            s: 'ok',
+            t: history.map(p => p.time),
+            c: history.map(p => p.price),
+            o: history.map(p => p.price),
+            h: history.map(p => p.price),
+            l: history.map(p => p.price),
+            v: history.map(() => 0),
+        };
     }
 
     async getStockPrice(symbol: string | string[]): Promise<StockPriceResponse> {
-        const symbolParam = Array.isArray(symbol) ? symbol.join(',') : symbol;
-        const response = await fetch(`/api/marketdata/stocks/prices/${symbolParam}`, {
-            headers: this.getAuthHeaders(),
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch price for ${symbolParam}`);
-        }
-        return await response.json();
+        const symbols = Array.isArray(symbol) ? symbol : [symbol];
+        
+        const responses = await Promise.all(symbols.map(async (s) => {
+            const response = await fetch(`/api/emulate/${s}/price`);
+            if (!response.ok) {
+                // Return a null or error object to handle failed requests gracefully
+                return { symbol: s, price: null, error: true };
+            }
+            const priceInfo: PriceInfo = await response.json();
+            return { symbol: s, price: priceInfo.price, error: false };
+        }));
+    
+        const successfulResponses = responses.filter(r => !r.error);
+    
+        return {
+            symbol: successfulResponses.map(r => r.symbol),
+            mid: successfulResponses.map(r => r.price as number),
+            updated: successfulResponses.map(() => new Date().toISOString()),
+        };
     }
 
     async getTransactions(): Promise<Trade[]> {

@@ -1,6 +1,6 @@
 //! Application state 
 
-use crate::models::User;
+use crate::{models::User, emulate::StockEmulator};
 use dashmap::DashMap;
 use secrecy::Secret;
 use std::sync::Arc;
@@ -10,6 +10,7 @@ use lazy_static::lazy_static;
 #[derive(Clone)]
 pub struct AppState {
     pub user_store: Arc<DashMap<String, User>>,
+    pub emulator: StockEmulator,
 }
 
 lazy_static! {
@@ -21,7 +22,7 @@ impl AppState {
     pub fn new() -> Self {
         let user_store = Arc::new(DashMap::new());
         let user_id = Uuid::new_v4();
-        let password_hash = "password123".to_string(); // In a real app, this would be a proper hash
+        let password_hash = "password123".to_string();
         let user = User {
             id: user_id,
             email: "test@example.com".to_string(),
@@ -29,7 +30,9 @@ impl AppState {
         };
         user_store.insert("test@example.com".to_string(), user);
 
-        Self { user_store }
+        let emulator = StockEmulator::new().expect("failed to create stock emulator");
+
+        Self { user_store, emulator }
     }
 }
 

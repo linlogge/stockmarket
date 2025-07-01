@@ -1687,6 +1687,7 @@ dependencies = [
  "http",
  "jsonwebtoken",
  "lazy_static",
+ "once_cell",
  "rand",
  "reqwest",
  "secrecy",
