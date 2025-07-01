@@ -26,9 +26,9 @@ export const StockChartCard = ({
     const isNegative = priceDiff < 0;
 
     el.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center">
-                <div class="me-3">${icon}</div>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-3">
+            <div class="d-flex align-items-center mb-3 mb-lg-0">
+                <div class="me-3" style="width: 32px; height: 32px;">${icon}</div>
                 <div>
                     <h5>${companyName} <small class="text-muted">${symbol}</small></h5>
                     <div>
