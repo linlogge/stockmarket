@@ -4,9 +4,9 @@ import { router } from "../main";
 export const LoginForm = () => {
     const el = document.createElement('div');
     el.innerHTML = `
-        <div class="card">
+        <div class="card shadow-sm p-4">
             <div class="card-body">
-                <h5 class="card-title">Login</h5>
+                <h4 class="card-title mb-4">Welcome back!</h4>
                 <div class="alert alert-danger d-none" id="login-error">Invalid credentials</div>
                 <form id="login-form">
                     <div class="mb-3">

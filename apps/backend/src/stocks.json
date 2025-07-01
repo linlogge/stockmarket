@@ -5,10 +5,7 @@
     { "symbol": "AMZN", "company": "Amazon.com, Inc." },
     { "symbol": "META", "company": "Meta Platforms, Inc." },
     { "symbol": "SAP", "company": "SAP SE" },
-    { "symbol": "SIE.DE", "company": "Siemens AG" },
-    { "symbol": "VOW3.DE", "company": "Volkswagen AG" },
-    { "symbol": "ADS.DE", "company": "Adidas AG" },
-    { "symbol": "HSBA.L", "company": "HSBC Holdings plc" },
-    { "symbol": "ULVR.L", "company": "Unilever PLC" },
-    { "symbol": "AZN.L", "company": "AstraZeneca PLC" }
+    { "symbol": "SIE", "company": "Siemens AG" },
+    { "symbol": "VWAGY", "company": "Volkswagen AG" },
+    { "symbol": "ADDDF", "company": "Adidas AG" }
 ]

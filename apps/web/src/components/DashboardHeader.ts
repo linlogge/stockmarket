@@ -1,27 +1,29 @@
+import { UserDropdown } from "./UserDropdown";
+import Bell from '~icons/solar/bell-bing-bold'
+import Magnifier from '~icons/solar/magnifer-linear'
+
 export const DashboardHeader = () => {
-    const el = document.createElement('div');
-    el.className = 'd-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom';
-    el.innerHTML = `
-        <h1 class="h2">Dashboard</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-            </div>
-            <div class="dropdown">
-                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-calendar3"></i>
-                    This week
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This week</a></li>
-                    <li><a class="dropdown-item" href="#">This month</a></li>
-                    <li><a class="dropdown-item" href="#">This quarter</a></li>
-                    <li><a class="dropdown-item" href="#">This year</a></li>
-                </ul>
-            </div>
+    const topHeaderEl = document.createElement('div');
+    topHeaderEl.className = 'd-flex justify-content-between align-items-center mb-4';
+    topHeaderEl.innerHTML = `
+        <div class="input-group" style="width: 300px;">
+            <span class="input-group-text bg-white border-0" id="search-addon">${Magnifier}</span>
+            <input type="text" class="form-control border-0 bg-white" placeholder='Search for stocks...' aria-label="Search" aria-describedby="search-addon">
         </div>
     `;
-    return el;
+    const rightHeaderEl = document.createElement('div');
+    rightHeaderEl.className = 'd-flex align-items-center';
+    rightHeaderEl.innerHTML = `
+        <div class="position-relative me-3">
+            ${Bell}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                3
+                <span class="visually-hidden">unread messages</span>
+            </span>
+        </div>
+        <div class="vr mx-3"></div>
+    `;
+    rightHeaderEl.appendChild(UserDropdown());
+    topHeaderEl.appendChild(rightHeaderEl);
+    return topHeaderEl;
 }; 

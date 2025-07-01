@@ -1,10 +1,11 @@
 import LogoIcon from '~icons/solar/chart-square-bold'
 
-export const Logo = () => {
-    return `
-    <div class="d-flex align-items-center">
+export const Logo = (): HTMLElement => {
+    const el = document.createElement('div');
+    el.className = 'd-flex align-items-center';
+    el.innerHTML = `
         ${LogoIcon}
         <span class="fs-4 ms-2 fw-bold">GoStock</span>
-    </div>
-    `
+    `;
+    return el;
 };

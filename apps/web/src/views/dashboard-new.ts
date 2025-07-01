@@ -1,10 +1,11 @@
-import { Sidebar } from '../components/Sidebar';
-import { UserDropdown } from '../components/UserDropdown';
+import { Sidebar } from '../components/DashboardSidebar';
 import { stockService } from '../services/stockService';
 import { StockCard } from '../components/StockCard';
-import { siMeta, siApple, siGoogle, siMsi } from 'simple-icons';
+import { siMeta, siApple, siGoogle } from 'simple-icons';
 import './dashboard-new.scss';
 import { StockChartCard } from '../components/StockChartCard';
+import { Watchlist } from '../components/WatchList';
+import { DashboardHeader } from '../components/DashboardHeader';
 
 const MyPortfolioSection = () => {
     const el = document.createElement('div');
@@ -23,7 +24,6 @@ const MyPortfolioSection = () => {
     const stockInfoMap: { [key: string]: { icon: string, name: string } } = {
         'AAPL': { icon: siApple.svg, name: 'Apple' },
         'META': { icon: siMeta.svg, name: 'Meta' },
-        'MSFT': { icon: siMsi.svg, name: 'Microsoft' },
         'GOOGL': { icon: siGoogle.svg, name: 'Google' }
     };
     const stockSymbols = Object.keys(stockInfoMap);
@@ -33,12 +33,14 @@ const MyPortfolioSection = () => {
             cardContainer.innerHTML = '';
             response.symbol.forEach((symbol, index) => {
                 const price = response.mid[index];
+                const diff = response.diff[index];
                 const info = stockInfoMap[symbol];
                 if (info) {
                     const card = StockCard({
                         icon: info.icon,
                         name: info.name,
                         price: price,
+                        diff: diff,
                     });
                     cardContainer.appendChild(card);
                 }
@@ -49,95 +51,6 @@ const MyPortfolioSection = () => {
             cardContainer.innerHTML = `<p class="text-danger">Could not load portfolio data.</p>`;
         });
 
-    return el;
-};
-
-const MyWatchlistSection = () => {
-    const el = document.createElement('div');
-    el.className = 'my-watchlist-section card shadow-sm p-4';
-    el.innerHTML = `
-        <h5 class="mb-3">My watchlist <i class="bi bi-plus-circle"></i></h5>
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/spotify-logo.svg" alt="Spotify Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">SPOT</p>
-                        <small class="text-muted">Spotify</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$310,40</p>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 1,10%</small>
-                </div>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/airbnb-logo.svg" alt="Airbnb Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">ABNB</p>
-                        <small class="text-muted">Airbnb</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$132,72</p>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 10,29%</small>
-                </div>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/shopify-logo.svg" alt="Shopify Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">SHOP</p>
-                        <small class="text-muted">Shopify</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$28,57</p>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 6,48%</small>
-                </div>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/sony-logo.svg" alt="Sony Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">SONY</p>
-                        <small class="text-muted">Playstation</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$71,86</p>
-                    <small class="text-success"><i class="bi bi-arrow-up"></i> 0,98%</small>
-                </div>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/dropbox-logo.svg" alt="Dropbox Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">DBX</p>
-                        <small class="text-muted">Dropbox Inc</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$20,44</p>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 3,08%</small>
-                </div>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <img src="/public/paypal-logo.svg" alt="Paypal Logo" width="30" height="30" class="me-2">
-                    <div>
-                        <p class="mb-0 fw-bold">PYPL</p>
-                        <small class="text-muted">Paypal</small>
-                    </div>
-                </div>
-                <div>
-                    <p class="mb-0 fw-bold">$87,66</p>
-                    <small class="text-danger"><i class="bi bi-arrow-down"></i> 3,86%</small>
-                </div>
-            </li>
-        </ul>
-    `;
     return el;
 };
 
@@ -152,30 +65,7 @@ export const dashboardNewView = () => {
     const mainContentEl = document.createElement('div');
     mainContentEl.className = 'flex-grow-1 p-4'; 
 
-    const topHeaderEl = document.createElement('div');
-    topHeaderEl.className = 'd-flex justify-content-between align-items-center mb-4';
-    topHeaderEl.innerHTML = `
-        <div class="input-group" style="width: 300px;">
-            <span class="input-group-text bg-white border-0" id="search-addon"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control border-0" placeholder='Pres "⌘" to search for various stocks' aria-label="Search" aria-describedby="search-addon">
-        </div>
-    `;
-    const rightHeaderEl = document.createElement('div');
-    rightHeaderEl.className = 'd-flex align-items-center';
-    rightHeaderEl.innerHTML = `
-        <i class="bi bi-envelope-fill me-3 fs-5"></i>
-        <div class="position-relative me-3">
-            <i class="bi bi-bell-fill fs-5"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                3
-                <span class="visually-hidden">unread messages</span>
-            </span>
-        </div>
-        <div class="vr mx-3"></div>
-    `;
-    rightHeaderEl.appendChild(UserDropdown());
-    topHeaderEl.appendChild(rightHeaderEl);
-    mainContentEl.appendChild(topHeaderEl);
+    mainContentEl.appendChild(DashboardHeader());
 
     mainContentEl.appendChild(MyPortfolioSection());
 
@@ -208,7 +98,8 @@ export const dashboardNewView = () => {
 
     const myWatchlistCol = document.createElement('div');
     myWatchlistCol.className = 'col-md-4';
-    myWatchlistCol.appendChild(MyWatchlistSection());
+    const watchlist = Watchlist();
+    myWatchlistCol.appendChild(watchlist.element);
     bottomRowEl.appendChild(myWatchlistCol);
 
     mainContentEl.appendChild(bottomRowEl);
@@ -216,6 +107,7 @@ export const dashboardNewView = () => {
     el.appendChild(mainContentEl);
 
     const cleanup = () => {
+        watchlist.cleanup();
     };
 
     return { element: el, cleanup };
