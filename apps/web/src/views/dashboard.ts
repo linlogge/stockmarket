@@ -3,7 +3,7 @@ import { stockService } from '../services/stockService';
 import { StockCard } from '../components/StockCard';
 import { siMeta, siApple, siGoogle } from 'simple-icons';
 import { StockChartCard } from '../components/StockChartCard';
-import { Watchlist } from '../components/WatchList';
+import { Watchlist } from '../components/Watchlist';
 import { DashboardHeader } from '../components/DashboardHeader';
 
 const MyPortfolioSection = ({ onStockSelected }: { onStockSelected: (symbol: string, companyName: string, icon: string) => void }) => {
