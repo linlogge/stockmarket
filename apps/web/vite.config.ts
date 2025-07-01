@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
+import icons from 'unplugin-icons/vite'
 
 export default defineConfig({
     resolve: {
@@ -15,5 +16,10 @@ export default defineConfig({
                 changeOrigin: true,
             }
         }
-    }
+    },
+    plugins: [
+        icons({
+            compiler: "raw",
+        })
+    ]
 })
