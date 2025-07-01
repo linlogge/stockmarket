@@ -21,7 +21,7 @@ export const StockChartCard = ({
     priceDiffPercent,
 }: StockChartCardProps) => {
     const el = document.createElement('div');
-    el.className = 'card shadow-sm p-4';
+    el.className = 'card p-4 shadow-sm';
 
     const isNegative = priceDiff < 0;
 
@@ -58,20 +58,10 @@ export const StockChartCard = ({
         datasets: [{
             label: `${symbol} Price`,
             data: [],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            tension: 0.1
         }]
     };
 
-    const chart = PortfolioChart(initialData, {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: false
-            }
-        }
-    });
+    const chart = PortfolioChart(initialData);
     chartContainer.appendChild(chart.element);
 
     const buttons = el.querySelectorAll<HTMLButtonElement>('.btn-group button');
@@ -96,8 +86,25 @@ export const StockChartCard = ({
                 datasets: [{
                     label: `${symbol} Price`,
                     data: candleData.c,
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    tension: 0.1
+                    borderColor: '#20c997', // $teal
+                    backgroundColor: (context: any) => {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return null;
+                        }
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, 'rgba(32, 201, 151, 0.3)');
+                        gradient.addColorStop(1, 'rgba(32, 201, 151, 0)');
+                        return gradient;
+                    },
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#20c997',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
                 }]
             };
             chart.update(newData);

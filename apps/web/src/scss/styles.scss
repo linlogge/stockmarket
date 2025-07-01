@@ -2,3 +2,30 @@
 @import "./variables.scss";
 @import "~bootstrap/scss/bootstrap";
 
+.btn-group {
+  gap: 0.5rem;
+
+  .btn {
+      border-radius: 20px !important;
+      padding: 0.25rem 1rem;
+      font-size: 0.875rem;
+      background-color: $gray-100;
+      color: $gray-700;
+      border-color: transparent;
+      transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+
+      &:hover {
+          background-color: $gray-200;
+      }
+
+      &.active {
+          background-color: $gray-900;
+          color: $white;
+      }
+
+      &:disabled {
+          opacity: .5;
+      }
+  }
+}
+
