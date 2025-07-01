@@ -1,61 +1,54 @@
 import { Sidebar } from '../components/Sidebar';
 import { PortfolioChart } from '../components/PortfolioChart';
 import { UserDropdown } from '../components/UserDropdown';
+import { stockService } from '../services/stockService';
+import { StockCard } from '../components/StockCard';
 import { siMeta, siApple, siGoogle, siMsi } from 'simple-icons';
 import './dashboard-new.scss';
 
 const MyPortfolioSection = () => {
     const el = document.createElement('div');
     el.className = 'my-portfolio-section mb-4';
-    el.innerHTML = `
-        <h3 class="mb-3">My Portfolio</h3>
-        <div class="row row-cols-1 row-cols-md-4 g-4">
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        ${siApple.svg}
-                        <h6 class="card-title text-center">Apple</h6>
-                        <p class="card-text text-muted">Total Shares</p>
-                        <p class="card-text fw-bold">$310,40</p>
-                        <p class="card-text text-danger"><i class="bi bi-arrow-down"></i> 1,10%</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        ${siMeta.svg}
-                        <h6 class="card-title text-center">Meta</h6>
-                        <p class="card-text text-muted">Total Shares</p>
-                        <p class="card-text fw-bold">$140,45</p>
-                        <p class="card-text text-danger"><i class="bi bi-arrow-down"></i> 0,10%</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        ${siMsi.svg}
-                        <h6 class="card-title text-center">Microsoft</h6>
-                        <p class="card-text text-muted">Total Shares</p>
-                        <p class="card-text fw-bold">$240,98</p>
-                        <p class="card-text text-success"><i class="bi bi-arrow-up"></i> 0,85%</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        ${siGoogle.svg}
-                        <h6 class="card-title text-center">Google</h6>
-                        <p class="card-text text-muted">Total Shares</p>
-                        <p class="card-text fw-bold">$99,12</p>
-                        <p class="card-text text-danger"><i class="bi bi-arrow-down"></i> 0,04%</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+
+    const header = document.createElement('h3');
+    header.className = 'mb-3';
+    header.textContent = 'My Portfolio';
+    el.appendChild(header);
+
+    const cardContainer = document.createElement('div');
+    cardContainer.className = 'row row-cols-1 row-cols-md-4 g-4';
+    cardContainer.innerHTML = `<p>Loading portfolio...</p>`;
+    el.appendChild(cardContainer);
+
+    const stockInfoMap: { [key: string]: { icon: string, name: string } } = {
+        'AAPL': { icon: siApple.svg, name: 'Apple' },
+        'META': { icon: siMeta.svg, name: 'Meta' },
+        'MSFT': { icon: siMsi.svg, name: 'Microsoft' },
+        'GOOGL': { icon: siGoogle.svg, name: 'Google' }
+    };
+    const stockSymbols = Object.keys(stockInfoMap);
+
+    stockService.getStockPrice(stockSymbols)
+        .then(response => {
+            cardContainer.innerHTML = ''; // Clear loading state
+            response.symbol.forEach((symbol, index) => {
+                const price = response.mid[index];
+                const info = stockInfoMap[symbol];
+                if (info) {
+                    const card = StockCard({
+                        icon: info.icon,
+                        name: info.name,
+                        price: price,
+                    });
+                    cardContainer.appendChild(card);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Failed to fetch stock prices:', error);
+            cardContainer.innerHTML = `<p class="text-danger">Could not load portfolio data.</p>`;
+        });
+
     return el;
 };
 

@@ -1,3 +1,5 @@
+import { authService } from "./authService";
+
 export interface StockHistory {
     labels: string[];
     data: number[];
@@ -14,9 +16,10 @@ export interface Stock {
     company: string;
 }
 
-export interface StockPrice {
-    symbol: string;
-    price: number;
+export interface StockPriceResponse {
+    symbol: string[];
+    mid: number[];
+    updated: string[];
 }
 
 export interface PortfolioSummary {
@@ -26,8 +29,21 @@ export interface PortfolioSummary {
 }
 
 class StockService {
+    private getAuthHeaders(): HeadersInit {
+        const token = authService.getToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
     async getPortfolioHistory(): Promise<StockHistory> {
-        const response = await fetch('/api/portfolio/history');
+        const response = await fetch('/api/portfolio/history', {
+            headers: this.getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch portfolio history');
         }
@@ -35,7 +51,9 @@ class StockService {
     }
 
     async getPortfolioSummary(): Promise<PortfolioSummary> {
-        const response = await fetch('/api/portfolio/summary');
+        const response = await fetch('/api/portfolio/summary', {
+            headers: this.getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch portfolio summary');
         }
@@ -43,23 +61,30 @@ class StockService {
     }
 
     async getAvailableStocks(): Promise<Stock[]> {
-        const response = await fetch('/api/stocks');
+        const response = await fetch('/api/stocks', {
+            headers: this.getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch available stocks');
         }
         return await response.json();
     }
 
-    async getStockPrice(symbol: string): Promise<StockPrice> {
-        const response = await fetch(`/api/stocks/${symbol}/price`);
+    async getStockPrice(symbol: string | string[]): Promise<StockPriceResponse> {
+        const symbolParam = Array.isArray(symbol) ? symbol.join(',') : symbol;
+        const response = await fetch(`/api/marketdata/stocks/prices/${symbolParam}`, {
+            headers: this.getAuthHeaders(),
+        });
         if (!response.ok) {
-            throw new Error(`Failed to fetch price for ${symbol}`);
+            throw new Error(`Failed to fetch price for ${symbolParam}`);
         }
         return await response.json();
     }
 
     async getTransactions(): Promise<Trade[]> {
-        const response = await fetch('/api/transactions');
+        const response = await fetch('/api/transactions', {
+            headers: this.getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch transactions');
         }
@@ -69,9 +94,7 @@ class StockService {
     async submitTrade(trade: Trade) {
         const response = await fetch('/api/trade', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: this.getAuthHeaders(),
             body: JSON.stringify(trade),
         });
 
