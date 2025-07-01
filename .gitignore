@@ -16,3 +16,4 @@ dist/
 .env.production
 build/
 node_modules/
+design.webp
