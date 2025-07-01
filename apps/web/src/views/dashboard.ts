@@ -1,63 +1,126 @@
-import { DashboardHeader } from '../components/DashboardHeader';
-import { PortfolioChart } from '../components/PortfolioChart';
-import { PositionsTable } from '../components/PositionsTable';
-import { SummaryCard } from '../components/SummaryCard';
+import { Sidebar } from '../components/DashboardSidebar';
 import { stockService } from '../services/stockService';
+import { StockCard } from '../components/StockCard';
+import { siMeta, siApple, siGoogle } from 'simple-icons';
+import { StockChartCard } from '../components/StockChartCard';
+import { Watchlist } from '../components/WatchList';
+import { DashboardHeader } from '../components/DashboardHeader';
 
-export const dashboardView = () => {
+const MyPortfolioSection = ({ onStockSelected }: { onStockSelected: (symbol: string, companyName: string, icon: string) => void }) => {
     const el = document.createElement('div');
-    el.className = 'container mt-4';
+    el.className = 'my-portfolio-section mb-4';
 
-    el.appendChild(DashboardHeader());
+    const header = document.createElement('h3');
+    header.className = 'mb-3';
+    header.textContent = 'My Portfolio';
+    el.appendChild(header);
 
-    const summaryRow = document.createElement('div');
-    summaryRow.className = 'row';
+    const cardContainer = document.createElement('div');
+    cardContainer.className = 'd-flex flex-row gap-4 py-3 flex-nowrap overflow-auto';
+    cardContainer.innerHTML = `<p>Loading portfolio...</p>`;
+    el.appendChild(cardContainer);
 
-    const portfolioCard = SummaryCard({
-        title: 'Portfolio Value',
-        value: '€0.00'
-    });
-    const dailyGainCard = SummaryCard({
-        title: "Day's Gain/Loss",
-        value: '€0.00'
-    });
-    const cashCard = SummaryCard({
-        title: 'Account Cash',
-        value: '€15,832.10',
-        footerText: 'Ready to invest'
-    });
+    const stockInfoMap: { [key: string]: { icon: string, name: string } } = {
+        'AAPL': { icon: siApple.svg, name: 'Apple' },
+        'META': { icon: siMeta.svg, name: 'Meta' },
+        'GOOGL': { icon: siGoogle.svg, name: 'Google' }
+    };
+    const stockSymbols = Object.keys(stockInfoMap);
 
-    summaryRow.appendChild(portfolioCard.element);
-    summaryRow.appendChild(dailyGainCard.element);
-    summaryRow.appendChild(cashCard.element);
-    el.appendChild(summaryRow);
-
-    el.appendChild(PortfolioChart());
-    el.appendChild(PositionsTable());
-
-    const updateSummary = async () => {
-        try {
-            const summary = await stockService.getPortfolioSummary();
-            portfolioCard.update({ value: `${summary.portfolio_value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}` });
-
-            const gain = summary.days_gain;
-            const gainPercent = summary.days_gain_percent * 100;
-            dailyGainCard.update({
-                value: `${gain.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}`,
-                change: `${gainPercent.toFixed(2)}%`.replace('.',','),
-                changeDirection: gain >= 0 ? 'up' : 'down'
+    stockService.getStockPrice(stockSymbols)
+        .then(response => {
+            cardContainer.innerHTML = '';
+            response.symbol.forEach((symbol, index) => {
+                const price = response.mid[index];
+                const diff = response.diff[index];
+                const info = stockInfoMap[symbol];
+                if (info) {
+                    const card = StockCard({
+                        icon: info.icon,
+                        name: info.name,
+                        price: price,
+                        diff: diff,
+                    });
+                    card.onclick = () => onStockSelected(symbol, info.name, info.icon);
+                    card.style.cursor = 'pointer';
+                    cardContainer.appendChild(card);
+                }
             });
+        })
+        .catch(error => {
+            console.error('Failed to fetch stock prices:', error);
+            cardContainer.innerHTML = `<p class="text-danger">Could not load portfolio data.</p>`;
+        });
+
+    return el;
+};
+
+export const dashboardNewView = () => {
+    const el = document.createElement('div');
+    el.className = 'd-flex'; 
+
+    const sidebar = Sidebar();
+
+    const navbarEl = document.createElement('div');
+    navbarEl.appendChild(sidebar.element); 
+    el.appendChild(navbarEl);
+
+    const mainContentEl = document.createElement('div');
+    mainContentEl.className = 'flex-grow-1 p-4'; 
+
+    mainContentEl.appendChild(DashboardHeader());
+
+    const stockChartCol = document.createElement('div');
+    stockChartCol.className = 'col-md-8';
+
+    const renderStockChart = async (symbol: string, companyName: string, icon: string) => {
+        stockChartCol.innerHTML = `<p>Loading chart for ${symbol}...</p>`;
+        try {
+            const priceData = await stockService.getStockPrice(symbol);
+            const price = priceData.mid[0];
+            const diff = priceData.diff[0];
+            const openPrice = price - diff;
+            const diffPercent = openPrice !== 0 ? (diff / openPrice) * 100 : 0;
+
+            const stockChartCard = StockChartCard({
+                icon: icon,
+                companyName: companyName,
+                symbol: symbol,
+                price: price,
+                priceDiff: diff,
+                priceDiffPercent: diffPercent,
+            });
+            stockChartCol.innerHTML = '';
+            stockChartCol.appendChild(stockChartCard);
         } catch (error) {
-            console.error("Failed to update portfolio summary", error);
+            console.error(`Failed to load chart data for ${symbol}`, error);
+            stockChartCol.innerHTML = `<p class="text-danger">Could not load chart for ${symbol}.</p>`;
         }
     };
 
-    updateSummary();
-    const pollingInterval = setInterval(updateSummary, 1000);
+    mainContentEl.appendChild(MyPortfolioSection({ onStockSelected: renderStockChart }));
+
+    const bottomRowEl = document.createElement('div');
+    bottomRowEl.className = 'row g-4';
+    
+    bottomRowEl.appendChild(stockChartCol);
+
+    const myWatchlistCol = document.createElement('div');
+    myWatchlistCol.className = 'col-md-4';
+    const watchlist = Watchlist();
+    myWatchlistCol.appendChild(watchlist.element);
+    bottomRowEl.appendChild(myWatchlistCol);
+
+    mainContentEl.appendChild(bottomRowEl);
+
+    el.appendChild(mainContentEl);
 
     const cleanup = () => {
-        clearInterval(pollingInterval);
+        watchlist.cleanup();
+        sidebar.cleanup();
     };
 
+    renderStockChart('AAPL', 'Apple', siApple.svg);
+
     return { element: el, cleanup };
-}; 
+};

@@ -31,6 +31,7 @@ pub struct PriceInfo {
 #[derive(Clone)]
 pub struct StockEmulator {
     prices: Arc<DashMap<String, (f64, f64)>>, 
+    histories: Arc<DashMap<String, Vec<PricePoint>>>,
     active_emulations: Arc<DashMap<String, ()>>,
     stocks: Arc<Vec<Stock>>,
 }
@@ -43,6 +44,7 @@ impl StockEmulator {
 
         Ok(Self {
             prices: Arc::new(DashMap::new()),
+            histories: Arc::new(DashMap::new()),
             active_emulations: Arc::new(DashMap::new()),
             stocks: Arc::new(stocks),
         })
@@ -81,23 +83,57 @@ impl StockEmulator {
 
         self.active_emulations.insert(stock.symbol.clone(), ());
 
-        let initial_price = 100.0 + rand::thread_rng().gen_range(-10.0..10.0);
+        // Generate initial history
+        let now = Utc::now();
+        let mut price = 100.0 + rand::thread_rng().gen_range(-10.0..10.0);
+        let initial_history: Vec<PricePoint> = (0..365)
+            .map(|i| {
+                let point_time = now - Duration::days(364 - i);
+                if i > 0 {
+                    let change: f64 = rand::thread_rng().gen_range(-2.0..2.0);
+                    price = (price + change).max(1.0);
+                }
+                PricePoint {
+                    time: point_time.timestamp(),
+                    price,
+                }
+            })
+            .collect();
+
+        let initial_price = initial_history.last().map_or(100.0, |p| p.price);
+
+        self.histories
+            .insert(stock.symbol.clone(), initial_history);
         self.prices
             .insert(stock.symbol.clone(), (initial_price, initial_price));
 
         let prices_clone = self.prices.clone();
+        let histories_clone = self.histories.clone();
         let symbol_clone = stock.symbol.clone();
 
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(time::Duration::from_secs(1));
             loop {
                 interval.tick().await;
+                let mut new_price = 0.0;
                 prices_clone
                     .entry(symbol_clone.clone())
                     .and_modify(|(price, _open)| {
                         let change = rand::thread_rng().gen_range(-0.5..0.5);
                         *price = (*price + change).max(1.0);
+                        new_price = *price;
                     });
+
+                if new_price > 0.0 {
+                    histories_clone
+                        .entry(symbol_clone.clone())
+                        .and_modify(|history| {
+                            history.push(PricePoint {
+                                time: Utc::now().timestamp(),
+                                price: new_price,
+                            });
+                        });
+                }
             }
         });
 
@@ -113,47 +149,21 @@ impl StockEmulator {
         from: i64,
         to: i64,
     ) -> Result<Vec<PricePoint>, EmulationError> {
-        let current_price = self.price(symbol).await?.price;
-        let mut rng = rand::thread_rng();
+        self.price(symbol).await?; // Ensure stock is initialized
 
-        let to_dt = Utc
-            .timestamp_opt(to, 0)
-            .single()
-            .ok_or_else(|| EmulationError::Internal(anyhow::anyhow!("invalid 'to' timestamp")))?;
-        let from_dt = Utc
-            .timestamp_opt(from, 0)
-            .single()
-            .ok_or_else(|| EmulationError::Internal(anyhow::anyhow!("invalid 'from' timestamp")))?;
+        let history_entry = self
+            .histories
+            .get(symbol)
+            .ok_or_else(|| EmulationError::StockNotFound(symbol.to_string()))?;
 
-        if from_dt >= to_dt {
-            return Ok(vec![]);
-        }
+        let history = history_entry.value();
 
-        let num_points = 100;
-        let total_duration = to_dt - from_dt;
-        let step = total_duration / num_points;
+        let result: Vec<PricePoint> = history
+            .iter()
+            .filter(|p| p.time >= from && p.time <= to)
+            .cloned()
+            .collect();
 
-        let mut price = current_price;
-        let mut history = Vec::with_capacity(num_points as usize + 1);
-
-        let change_per_day = 2.0;
-        let change_factor = (step.num_seconds() as f64 / (24.0 * 3600.0)).sqrt();
-
-        for i in 0..=num_points {
-            let point_time = to_dt - step * i;
-
-            if i > 0 {
-                let change = rng.gen_range(-change_per_day..change_per_day) * change_factor;
-                price = (price - change).max(1.0);
-            }
-
-            history.push(PricePoint {
-                time: point_time.timestamp(),
-                price,
-            });
-        }
-        history.reverse();
-
-        Ok(history)
+        Ok(result)
     }
 }

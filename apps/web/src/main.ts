@@ -5,7 +5,7 @@ import { Tooltip } from 'bootstrap';
 
 import { Router } from './router.ts';
 
-import { dashboardNewView } from "./views/dashboard-new.ts";
+import { dashboardNewView } from "./views/dashboard.ts";
 import { tradeView } from './views/trade.ts';
 import { loginView } from './views/login.ts';
 import { settingsView } from './views/settings.ts';
