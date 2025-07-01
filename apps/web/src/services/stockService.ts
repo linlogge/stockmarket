@@ -81,7 +81,42 @@ class StockService {
     }
 
     async getCandles(symbol: string, resolution: "1D" | "1W" | "1M" | "1Y" | "5Y"): Promise<CandleResponse> {
-        const response = await fetch(`/api/marketdata/stocks/candles/${resolution}/${symbol}`, {
+        const to = new Date();
+        const from = new Date();
+        let apiResolution: 'H' | 'D' | 'W' = 'D';
+
+        switch (resolution) {
+            case '1D':
+                from.setDate(to.getDate() - 1);
+                apiResolution = 'H';
+                break;
+            case '1W':
+                from.setDate(to.getDate() - 7);
+                apiResolution = 'H';
+                break;
+            case '1M':
+                from.setMonth(to.getMonth() - 1);
+                apiResolution = 'D';
+                break;
+            case '1Y':
+                from.setFullYear(to.getFullYear() - 1);
+                apiResolution = 'D';
+                break;
+            case '5Y':
+                from.setFullYear(to.getFullYear() - 5);
+                apiResolution = 'W';
+                break;
+        }
+
+        const toTimestamp = Math.floor(to.getTime() / 1000);
+        const fromTimestamp = Math.floor(from.getTime() / 1000);
+        
+        const params = new URLSearchParams();
+        params.append('from', fromTimestamp.toString());
+        params.append('to', toTimestamp.toString());
+        const queryString = params.toString();
+
+        const response = await fetch(`/api/marketdata/stocks/candles/${apiResolution}/${symbol}?${queryString}`, {
             headers: this.getAuthHeaders(),
         });
         if (!response.ok) {

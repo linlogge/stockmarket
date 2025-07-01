@@ -10,7 +10,6 @@ interface StockChartCardProps {
     price: number;
     priceDiff: number;
     priceDiffPercent: number;
-    onResolutionChange: (resolution: Resolution) => Promise<any>;
 }
 
 export const StockChartCard = ({
@@ -20,7 +19,7 @@ export const StockChartCard = ({
     price,
     priceDiff,
     priceDiffPercent,
-}: Omit<StockChartCardProps, 'onResolutionChange'>) => {
+}: StockChartCardProps) => {
     const el = document.createElement('div');
     el.className = 'card shadow-sm p-4';
 
@@ -44,8 +43,8 @@ export const StockChartCard = ({
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1D">1D</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm active" data-resolution="1W">1W</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1M">1M</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1Y">1Y</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="5Y">5Y</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-resolution="1Y">1Y</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-resolution="5Y">5Y</button>
             </div>
         </div>
     `;
@@ -79,8 +78,21 @@ export const StockChartCard = ({
 
     const updateChart = (resolution: Resolution) => {
         stockService.getCandles(symbol, resolution).then(candleData => {
+            if (candleData.s !== 'ok') {
+                console.error('Failed to fetch candle data');
+                return;
+            }
+            
+            const labels = candleData.t.map(ts => {
+                const date = new Date(ts * 1000);
+                if (resolution === '1D' || resolution === '1W') {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                return date.toLocaleDateString();
+            });
+
             const newData = {
-                labels: candleData.t.map(ts => new Date(ts * 1000).toLocaleDateString()),
+                labels: labels,
                 datasets: [{
                     label: `${symbol} Price`,
                     data: candleData.c,
