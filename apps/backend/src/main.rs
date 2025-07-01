@@ -9,8 +9,11 @@ use crate::{routes::create_router, state::AppState};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()

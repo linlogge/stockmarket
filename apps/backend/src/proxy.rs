@@ -2,7 +2,7 @@ use crate::error::AppError;
 use axum::{
     body::{self, Body},
     extract::Path,
-    http::{Request, Response, Uri},
+    http::{HeaderMap, HeaderValue, Request, Response, Uri},
 };
 use reqwest::Client;
 use tracing::debug;
@@ -17,9 +17,9 @@ pub async fn proxy_handler(
 
     let query = req.uri().query().unwrap_or("");
     let target_url_str = if query.is_empty() {
-        format!("{}/{}", MARKETDATA_API_URL, path)
+        format!("{}/v1/{}", MARKETDATA_API_URL, path)
     } else {
-        format!("{}/{}?{}", MARKETDATA_API_URL, path, query)
+        format!("{}/v1/{}?{}", MARKETDATA_API_URL, path, query)
     };
 
     debug!("target_url_str: {}", target_url_str);
@@ -28,19 +28,23 @@ pub async fn proxy_handler(
         .parse::<Uri>()
         .map_err(|_| AppError::InternalServerError)?;
 
-    let mut builder = client.request(req.method().clone(), target_url.to_string());
-
-    for (name, value) in req.headers() {
-        if name.as_str().to_lowercase() != "host" {
-            builder = builder.header(name, value);
-        }
-    }
-
+    let method = req.method().clone();
+    let mut headers = req.headers().clone();
     let body_bytes = body::to_bytes(req.into_body(), usize::MAX)
         .await
         .map_err(|_| AppError::InternalServerError)?;
 
-    let proxy_req = builder
+    headers.remove("host");
+
+    if let Ok(api_key) = std::env::var("MARKETDATA_API_KEY") {
+        if let Ok(header_value) = HeaderValue::from_str(&format!("Bearer {}", api_key)) {
+            headers.insert("Authorization", header_value);
+        }
+    }
+
+    let proxy_req = client
+        .request(method, target_url.to_string())
+        .headers(headers)
         .body(body_bytes)
         .build()
         .map_err(|_| AppError::InternalServerError)?;
