@@ -5,11 +5,11 @@ import { Tooltip } from 'bootstrap';
 
 import { Router } from './router.ts';
 
-import { landingView } from "./views/landing.ts";
 import { dashboardNewView } from "./views/dashboard-new.ts";
 import { tradeView } from './views/trade.ts';
 import { loginView } from './views/login.ts';
 import { settingsView } from './views/settings.ts';
+import { marketView } from './views/market.ts';
 
 document.addEventListener('DOMContentLoaded', () => {
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -25,7 +25,7 @@ if (!appElement) {
 export const router = new Router(appElement);
 
 router
-    .addRoute('/', landingView)
+    .addRoute('/', marketView)
     .addRoute('/dashboard', dashboardNewView, true)
     .addRoute('/trade', tradeView, true)
     .addRoute('/login', loginView)

@@ -1,10 +1,10 @@
 import { Sidebar } from '../components/Sidebar';
-import { PortfolioChart } from '../components/PortfolioChart';
 import { UserDropdown } from '../components/UserDropdown';
 import { stockService } from '../services/stockService';
 import { StockCard } from '../components/StockCard';
 import { siMeta, siApple, siGoogle, siMsi } from 'simple-icons';
 import './dashboard-new.scss';
+import { StockChartCard } from '../components/StockChartCard';
 
 const MyPortfolioSection = () => {
     const el = document.createElement('div');
@@ -30,7 +30,7 @@ const MyPortfolioSection = () => {
 
     stockService.getStockPrice(stockSymbols)
         .then(response => {
-            cardContainer.innerHTML = ''; // Clear loading state
+            cardContainer.innerHTML = '';
             response.symbol.forEach((symbol, index) => {
                 const price = response.mid[index];
                 const info = stockInfoMap[symbol];
@@ -182,34 +182,29 @@ export const dashboardNewView = () => {
     const bottomRowEl = document.createElement('div');
     bottomRowEl.className = 'row g-4';
 
-    const appleChartCol = document.createElement('div');
-    appleChartCol.className = 'col-md-8';
-    appleChartCol.innerHTML = `
-        <div class="card shadow-sm p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5>Apple inc <small class="text-muted">AAPL</small></h5>
-                <div>
-                    <span class="badge bg-danger me-2">-1,10%</span>
-                    <span class="fw-bold">$150,70</span>
-                    <small class="text-muted ms-2">Last update at 14.30</small>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between mb-3">
-                <div class="btn-group" role="group" aria-label="Chart time range">
-                    <button type="button" class="btn btn-outline-secondary btn-sm">1 Day</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm active">1 Week</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">1 Month</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">3 Month</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">6 Month</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">1 Year</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm">5 Year</button>
-                </div>
-                <button type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid"></i> All</button>
-            </div>
-            ${PortfolioChart().outerHTML}
-        </div>
-    `;
-    bottomRowEl.appendChild(appleChartCol);
+    const stockChartCol = document.createElement('div');
+    stockChartCol.className = 'col-md-8';
+    
+    stockChartCol.innerHTML = `<p>Loading chart...</p>`;
+
+    stockService.getStockPrice('AAPL').then(priceData => {
+        const price = priceData.mid[0];
+        const stockChartCard = StockChartCard({
+            icon: siApple.svg,
+            companyName: 'Apple Inc.',
+            symbol: 'AAPL',
+            price: price,
+            priceDiff: -1.5,
+            priceDiffPercent: -1.10
+        });
+        stockChartCol.innerHTML = '';
+        stockChartCol.appendChild(stockChartCard);
+    }).catch(error => {
+        console.error('Failed to load chart data', error);
+        stockChartCol.innerHTML = `<p class="text-danger">Could not load chart.</p>`;
+    });
+    
+    bottomRowEl.appendChild(stockChartCol);
 
     const myWatchlistCol = document.createElement('div');
     myWatchlistCol.className = 'col-md-4';

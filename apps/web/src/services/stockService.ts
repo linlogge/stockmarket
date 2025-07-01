@@ -22,6 +22,16 @@ export interface StockPriceResponse {
     updated: string[];
 }
 
+export interface CandleResponse {
+    s: string;
+    c: number[];
+    h: number[];
+    l: number[];
+    o: number[];
+    t: number[];
+    v: number[];
+}
+
 export interface PortfolioSummary {
     portfolio_value: number;
     days_gain: number;
@@ -66,6 +76,16 @@ class StockService {
         });
         if (!response.ok) {
             throw new Error('Failed to fetch available stocks');
+        }
+        return await response.json();
+    }
+
+    async getCandles(symbol: string, resolution: "1D" | "1W" | "1M" | "1Y" | "5Y"): Promise<CandleResponse> {
+        const response = await fetch(`/api/marketdata/stocks/candles/${resolution}/${symbol}`, {
+            headers: this.getAuthHeaders(),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch candles for ${symbol}`);
         }
         return await response.json();
     }

@@ -1,38 +1,43 @@
-import { Chart } from 'chart.js/auto';
+import { type ChartConfiguration, Chart } from 'chart.js/auto';
 import { stockService } from '../services/stockService';
 
-export const PortfolioChart = () => {
-    const el = document.createElement('div');
-    el.innerHTML = `<canvas id="portfolioChart"></canvas>`;
+export const PortfolioChart = (data: any, options?: any) => {
+    const canvas = document.createElement('canvas');
+    let chart: Chart | null = null;
+
+    const createChart = (config: ChartConfiguration) => {
+        chart = new Chart(canvas, config);
+    };
 
     setTimeout(() => {
-        const ctx = (document.getElementById('portfolioChart') as HTMLCanvasElement)?.getContext('2d');
-        if (!ctx) {
-            return;
-        }
-
-        stockService.getPortfolioHistory().then(history => {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: history.labels,
-                    datasets: [{
-                        label: 'Portfolio Value',
-                        data: history.data,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
+        const config: ChartConfiguration = {
+            type: 'line',
+            data: data,
+            options: options || {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false
                     }
                 }
-            });
-        });
+            }
+        };
+        createChart(config);
     }, 0);
 
-
-    return el;
+    return {
+        element: canvas,
+        update: (newData: any) => {
+            if (chart) {
+                chart.data = newData;
+                chart.update();
+            }
+        },
+        destroy: () => {
+            if (chart) {
+                chart.destroy();
+            }
+        }
+    };
 }; 
