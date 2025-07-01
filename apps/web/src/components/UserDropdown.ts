@@ -4,11 +4,11 @@ import { router } from '../main'
 
 export const UserDropdown = () => {
     const el = document.createElement('div');
-    el.className = 'dropdown';
+    el.className = 'dropdown d-none d-lg-block';
     el.innerHTML = `
         <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle icon-link" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
             ${User}
-            <strong>Noël Sigmunczyk</strong>
+            <strong class="d-none d-lg-inline">Noël Sigmunczyk</strong>
         </a>
         <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser1">
             <li><a class="dropdown-item" href="#">Settings</a></li>

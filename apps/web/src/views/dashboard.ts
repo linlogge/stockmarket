@@ -60,13 +60,11 @@ export const dashboardNewView = () => {
     el.className = 'd-flex'; 
 
     const sidebar = Sidebar();
-
-    const navbarEl = document.createElement('div');
-    navbarEl.appendChild(sidebar.element); 
-    el.appendChild(navbarEl);
+    el.appendChild(sidebar.element);
 
     const mainContentEl = document.createElement('div');
-    mainContentEl.className = 'flex-grow-1 p-4'; 
+    mainContentEl.className = 'flex-grow-1 p-4 overflow-auto';
+    mainContentEl.style.height = '100vh';
 
     mainContentEl.appendChild(DashboardHeader());
 
