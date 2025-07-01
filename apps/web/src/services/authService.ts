@@ -2,7 +2,7 @@ const TOKEN_KEY = 'stockmarket_token';
 
 class AuthService {
     login(email: string, password: string): Promise<void> {
-        return fetch('/api/login', {
+        return fetch('/api/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -23,7 +23,6 @@ class AuthService {
 
     logout(): void {
         this.clearToken();
-        fetch('/api/logout', { method: 'POST' });
         document.body.dispatchEvent(new Event('auth-change'));
     }
 

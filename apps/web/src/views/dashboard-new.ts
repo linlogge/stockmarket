@@ -1,5 +1,6 @@
 import { Sidebar } from '../components/Sidebar';
 import { PortfolioChart } from '../components/PortfolioChart';
+import { UserDropdown } from '../components/UserDropdown';
 import { siMeta, siApple, siGoogle, siMsi } from 'simple-icons';
 import './dashboard-new.scss';
 
@@ -165,21 +166,22 @@ export const dashboardNewView = () => {
             <span class="input-group-text bg-white border-0" id="search-addon"><i class="bi bi-search"></i></span>
             <input type="text" class="form-control border-0" placeholder='Pres "⌘" to search for various stocks' aria-label="Search" aria-describedby="search-addon">
         </div>
-        <div class="d-flex align-items-center">
-            <i class="bi bi-envelope-fill me-3 fs-5"></i>
-            <div class="position-relative me-3">
-                <i class="bi bi-bell-fill fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    3
-                    <span class="visually-hidden">unread messages</span>
-                </span>
-            </div>
-            <div class="vr mx-3"></div>
-            <img src="https://via.placeholder.com/30" alt="User Avatar" class="rounded-circle me-2">
-            <span class="me-2">Airlangga Mahesa</span>
-            <i class="bi bi-chevron-down"></i>
-        </div>
     `;
+    const rightHeaderEl = document.createElement('div');
+    rightHeaderEl.className = 'd-flex align-items-center';
+    rightHeaderEl.innerHTML = `
+        <i class="bi bi-envelope-fill me-3 fs-5"></i>
+        <div class="position-relative me-3">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                3
+                <span class="visually-hidden">unread messages</span>
+            </span>
+        </div>
+        <div class="vr mx-3"></div>
+    `;
+    rightHeaderEl.appendChild(UserDropdown());
+    topHeaderEl.appendChild(rightHeaderEl);
     mainContentEl.appendChild(topHeaderEl);
 
     mainContentEl.appendChild(MyPortfolioSection());
