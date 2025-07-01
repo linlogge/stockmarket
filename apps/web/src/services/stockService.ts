@@ -30,6 +30,7 @@ export interface StockPriceResponse {
     symbol: string[];
     mid: number[];
     updated: string[];
+    diff: number[];
 }
 
 export interface CandleResponse {
@@ -144,10 +145,10 @@ class StockService {
             const response = await fetch(`/api/emulate/${s}/price`);
             if (!response.ok) {
                 // Return a null or error object to handle failed requests gracefully
-                return { symbol: s, price: null, error: true };
+                return { symbol: s, price: null, diff: null, error: true };
             }
             const priceInfo: PriceInfo = await response.json();
-            return { symbol: s, price: priceInfo.price, error: false };
+            return { symbol: s, price: priceInfo.price, diff: priceInfo.diff, error: false };
         }));
     
         const successfulResponses = responses.filter(r => !r.error);
@@ -155,6 +156,7 @@ class StockService {
         return {
             symbol: successfulResponses.map(r => r.symbol),
             mid: successfulResponses.map(r => r.price as number),
+            diff: successfulResponses.map(r => r.diff as number),
             updated: successfulResponses.map(() => new Date().toISOString()),
         };
     }
