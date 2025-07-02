@@ -67,7 +67,7 @@ You will need to run the backend server first, and then you can run either the w
 From the project root, run:
 
 ```sh
-cargo run -p stockmarket-backend
+cargo run -p stockmarket
 ```
 
 The backend server will start and listen on `http://127.0.0.1:3000`.
@@ -77,7 +77,7 @@ The backend server will start and listen on `http://127.0.0.1:3000`.
 From the project root, run:
 
 ```sh
-pnpm --filter=stockmarket-web dev
+pnpm --filter=stockmarket dev
 ```
 
 The web app will be available at `http://localhost:5173`.
