@@ -3,7 +3,7 @@ use crate::{
     emulator_handlers::{get_history, get_price, list_stocks},
     proxy::proxy_handler,
     state::AppState,
-    stocks::available_stocks_handler,
+    stocks::{available_stocks_handler, get_country_code_handler},
 };
 use axum::{
     middleware,
@@ -29,6 +29,7 @@ pub fn create_router(state: AppState) -> Router {
         .nest("/api/auth", auth_routes)
         .nest("/api/marketdata", proxy_routes)
         .nest("/api/stocks", stock_routes)
+        .route("/api/country", get(get_country_code_handler))
         .nest("/api/emulate", emulator_routes)
         .with_state(state)
 } 

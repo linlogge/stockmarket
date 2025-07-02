@@ -81,8 +81,15 @@ class StockService {
         return await response.json();
     }
 
-    async getAvailableStocks(): Promise<Stock[]> {
-        const response = await fetch('/api/emulate?locale=en-US');
+    async getAvailableStocks(countryCode?: "US" | "DE"): Promise<Stock[]> {
+        const url = new URL('/api/stocks', window.location.origin);
+
+        if (countryCode) {
+            url.searchParams.set('country', countryCode);
+        }
+
+        const response = await fetch(url);
+
         if (!response.ok) {
             throw new Error('Failed to fetch available stocks');
         }
@@ -182,6 +189,14 @@ class StockService {
             throw new Error('Trade submission failed');
         }
 
+        return await response.json();
+    }
+
+    async getCountryCode(): Promise<string> {
+        const response = await fetch('/api/country');
+        if (!response.ok) {
+            throw new Error('Failed to fetch country code');
+        }
         return await response.json();
     }
 }

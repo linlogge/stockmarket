@@ -2,7 +2,7 @@ use crate::error::AppError;
 use axum::{
     body::{self, Body},
     extract::Path,
-    http::{HeaderMap, HeaderValue, Request, Response, Uri},
+    http::{HeaderValue, Request, Response, Uri},
 };
 use reqwest::Client;
 use tracing::debug;

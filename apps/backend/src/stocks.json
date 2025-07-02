@@ -1,11 +1,11 @@
 [
-    { "symbol": "AAPL", "company": "Apple Inc." },
-    { "symbol": "GOOGL", "company": "Alphabet Inc." },
-    { "symbol": "MSFT", "company": "Microsoft Corporation" },
-    { "symbol": "AMZN", "company": "Amazon.com, Inc." },
-    { "symbol": "META", "company": "Meta Platforms, Inc." },
-    { "symbol": "SAP", "company": "SAP SE" },
-    { "symbol": "SIE", "company": "Siemens AG" },
-    { "symbol": "VWAGY", "company": "Volkswagen AG" },
-    { "symbol": "ADDDF", "company": "Adidas AG" }
+    { "symbol": "AAPL", "company": "Apple Inc.", "country": "US" },
+    { "symbol": "GOOGL", "company": "Alphabet Inc.", "country": "US" },
+    { "symbol": "MSFT", "company": "Microsoft Corporation", "country": "US" },
+    { "symbol": "AMZN", "company": "Amazon.com, Inc.", "country": "US" },
+    { "symbol": "META", "company": "Meta Platforms, Inc.", "country": "US" },
+    { "symbol": "SAP", "company": "SAP SE", "country": "DE" },
+    { "symbol": "SIE", "company": "Siemens AG", "country": "DE" },
+    { "symbol": "VWAGY", "company": "Volkswagen AG", "country": "DE" },
+    { "symbol": "ADDDF", "company": "Adidas AG", "country": "DE" }
 ]

@@ -9,6 +9,7 @@ use secrecy::SecretString;
 pub struct Stock {
     pub symbol: String,
     pub company: String,
+    pub country: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
