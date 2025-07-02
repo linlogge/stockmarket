@@ -1,4 +1,4 @@
-import { siGoogle, siApple, siMsi, siMeta, siSap, siVolkswagen, siAdidas, siSiemens } from "simple-icons";
+import { siGoogle, siApple, siMsi, siMeta, siSap, siVolkswagen, siAdidas, siSiemens, siTesla } from "simple-icons";
 
 export const ICONS: { [key: string]: string } = {
     'GOOGL': siGoogle.svg,
@@ -9,5 +9,6 @@ export const ICONS: { [key: string]: string } = {
     'VWAGY': siVolkswagen.svg,
     'ADDDF': siAdidas.svg,
     'SIE': siSiemens.svg,
+    'TSLA': siTesla.svg,
     'DEFAULT': siGoogle.svg,
 };

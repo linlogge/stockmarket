@@ -1,7 +1,7 @@
 [
     { "symbol": "AAPL", "company": "Apple Inc.", "country": "US" },
     { "symbol": "GOOGL", "company": "Alphabet Inc.", "country": "US" },
-    { "symbol": "MSFT", "company": "Microsoft Corporation", "country": "US" },
+    { "symbol": "TSLA", "company": "Tesla, Inc.", "country": "US" },
     { "symbol": "AMZN", "company": "Amazon.com, Inc.", "country": "US" },
     { "symbol": "META", "company": "Meta Platforms, Inc.", "country": "US" },
     { "symbol": "SAP", "company": "SAP SE", "country": "DE" },
