@@ -28,8 +28,9 @@ pub async fn get_price(
 
 #[derive(Deserialize)]
 pub struct HistoryQuery {
-    from: i64,
-    to: i64,
+    resolution: Option<String>,
+    from: Option<i64>,
+    to: Option<i64>,
 }
 
 pub async fn get_history(
@@ -39,7 +40,7 @@ pub async fn get_history(
 ) -> impl IntoResponse {
     match state
         .emulator
-        .history(&symbol, params.from, params.to)
+        .history(&symbol, params.resolution.as_deref().unwrap_or("1D"), params.from, params.to)
         .await
     {
         Ok(history) => (StatusCode::OK, Json(history)).into_response(),

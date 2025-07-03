@@ -21,6 +21,13 @@ export interface PricePoint {
     price: number;
 }
 
+// Backend price response shape.
+interface BackendPriceInfo {
+    symbol: string;
+    mid: number;
+}
+
+// Internal structure used by UI after diff calculation.
 export interface PriceInfo {
     price: number;
     diff: number;
@@ -41,6 +48,16 @@ export interface CandleResponse {
     o: number[];
     t: number[];
     v: number[];
+}
+
+// Historical candle returned by backend emulator.
+interface BackendHistory {
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+    timestamp: number;
 }
 
 export interface PortfolioSummary {
@@ -122,6 +139,7 @@ class StockService {
         const fromTimestamp = Math.floor(from.getTime() / 1000);
         
         const params = new URLSearchParams({
+            resolution,
             from: fromTimestamp.toString(),
             to: toTimestamp.toString(),
         });
@@ -131,40 +149,47 @@ class StockService {
         if (!response.ok) {
             throw new Error(`Failed to fetch candles for ${symbol}`);
         }
-        
-        const history: PricePoint[] = await response.json();
-        
+
+        const history: BackendHistory[] = await response.json();
+
         return {
             s: 'ok',
-            t: history.map(p => p.time),
-            c: history.map(p => p.price),
-            o: history.map(p => p.price),
-            h: history.map(p => p.price),
-            l: history.map(p => p.price),
-            v: history.map(() => 0),
+            t: history.map(p => p.timestamp),
+            c: history.map(p => p.close),
+            o: history.map(p => p.open),
+            h: history.map(p => p.high),
+            l: history.map(p => p.low),
+            v: history.map(p => p.volume),
         };
     }
 
+    // Maintain previous prices to compute diffs across invocations.
+    private previousPrices: Map<string, number> = new Map();
+
     async getStockPrice(symbol: string | string[]): Promise<StockPriceResponse> {
         const symbols = Array.isArray(symbol) ? symbol : [symbol];
-        
+
         const responses = await Promise.all(symbols.map(async (s) => {
             const response = await fetch(`/api/emulate/${s}/price`);
             if (!response.ok) {
-                // Return a null or error object to handle failed requests gracefully
-                return { symbol: s, price: null, diff: null, error: true };
+                return { symbol: s, mid: null, diff: null, error: true };
             }
-            const priceInfo: PriceInfo = await response.json();
-            return { symbol: s, price: priceInfo.price, diff: priceInfo.diff, error: false };
+            const backendInfo: BackendPriceInfo = await response.json();
+
+            const prev = this.previousPrices.get(s) ?? backendInfo.mid;
+            const diff = backendInfo.mid - prev;
+            this.previousPrices.set(s, backendInfo.mid);
+
+            return { symbol: s, mid: backendInfo.mid, diff, error: false };
         }));
-    
-        const successfulResponses = responses.filter(r => !r.error);
-    
+
+        const successful = responses.filter(r => !r.error);
+
         return {
-            symbol: successfulResponses.map(r => r.symbol),
-            mid: successfulResponses.map(r => r.price as number),
-            diff: successfulResponses.map(r => r.diff as number),
-            updated: successfulResponses.map(() => new Date().toISOString()),
+            symbol: successful.map(r => r.symbol),
+            mid: successful.map(r => r.mid as number),
+            diff: successful.map(r => r.diff as number),
+            updated: successful.map(() => new Date().toISOString()),
         };
     }
 

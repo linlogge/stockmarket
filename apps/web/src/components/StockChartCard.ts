@@ -43,8 +43,8 @@ export const StockChartCard = ({
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1D">1D</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm active" data-resolution="1W">1W</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1M">1M</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-resolution="1Y">1Y</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" disabled data-resolution="5Y">5Y</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1Y">1Y</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="5Y">5Y</button>
             </div>
         </div>
     `;
@@ -75,10 +75,21 @@ export const StockChartCard = ({
             
             const labels = candleData.t.map(ts => {
                 const date = new Date(ts * 1000);
-                if (resolution === '1D' || resolution === '1W') {
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                switch (resolution) {
+                    case '1D': // show time of day
+                        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    case '1W': // show day + short month
+                        return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+                    case '1M': // show day + short month
+                        return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+                    case '1Y': // show month + year
+                        return date.toLocaleDateString([], { month: 'short', year: '2-digit' });
+                    case '5Y': // show month + year for readability
+                        return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
+                    default:
+                        return date.toLocaleDateString();
                 }
-                return date.toLocaleDateString();
             });
 
             const newData = {
