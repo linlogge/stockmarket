@@ -28,7 +28,6 @@ export const router = new Router(appElement);
 router
     .addRoute('/', landingView)
     .addRoute('/dashboard', dashboardNewView, true)
-    .addRoute('/trade', tradeView, true)
     .addRoute('/login', loginView)
     .addRoute('/settings', settingsView, true)
     .addRoute('/pro', proView, true)
