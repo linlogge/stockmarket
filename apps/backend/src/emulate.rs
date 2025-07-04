@@ -87,54 +87,41 @@ impl StockEmulator {
         })
     }
 
-    /// Get historical price candles for a stock.
-    /// 
-    /// All date parameters are optional. By default the most recent candle is returned if no date parameters are provided.
-    ///
-    /// # Arguments
-    ///
-    /// * `symbol` - The symbol of the stock to get the history for.
-    /// * `resolution` - The duration of each candle. 
-    ///     * Minutely Resolutions: (minutely, 1, 3, 5, 15, 30, 45, ...)
-    ///     * Hourly Resolutions: (hourly, H, 1H, 2H, ...)
-    ///     * Daily Resolutions: (daily, D, 1D, 2D, ...)
-    ///     * Weekly Resolutions: (weekly, W, 1W, 2W, ...)
-    ///     * Monthly Resolutions: (monthly, M, 1M, 2M, ...)
-    ///     * Yearly Resolutions:(yearly, Y, 1Y, 2Y, ...)
-    /// * `from` - The leftmost candle on a chart (inclusive). From and countback are mutually exclusive. If you use countback, from must be omitted. Accepted timestamp inputs: unix.
-    /// * `to` - The rightmost candle on a chart (inclusive). Accepted timestamp inputs: unix.
-    ///
-    pub async fn history(&self, symbol: &str, resolution: &str, from: Option<i64>, to: Option<i64>) -> Result<Vec<History>, EmulationError> {   
+    pub async fn history(
+        &self,
+        symbol: &str,
+        resolution: &str,
+        from: Option<i64>,
+        to: Option<i64>,
+    ) -> Result<Vec<History>, EmulationError> {
         self.price(symbol).await?;
-
-        let now_ts = chrono::Utc::now().timestamp();
-
-        let (interval_sec, default_span): (i64, i64) = match resolution {
-            "1D" => (60 * 30, 60 * 60 * 24),              // 30-min candles, span 1 day
-            "1W" => (60 * 60 * 4, 60 * 60 * 24 * 7),       // 4-hour candles, span 1 week
-            "1M" => (60 * 60 * 24, 60 * 60 * 24 * 30),     // daily candles, span 30 days
-            "1Y" => (60 * 60 * 24 * 7, 60 * 60 * 24 * 365), // weekly candles, span 1 year
-            "5Y" => (60 * 60 * 24 * 30, 60 * 60 * 24 * 365 * 5), // monthly candles, span 5 years
-            _ => (60, 60 * 60 * 24), // fallback 1-min interval & 1 day span
+    
+        let now_ts = Utc::now().timestamp();
+    
+        let (interval_sec, default_span) = match resolution {
+            "1D" => (60 * 30, 60 * 60 * 24),
+            "1M" => (60 * 60 * 24, 60 * 60 * 24 * 30),
+            "3M" => (60 * 60 * 24 * 7, 60 * 60 * 24 * 90),
+            "1Y" => (60 * 60 * 24 * 30, 60 * 60 * 24 * 365),
+            _ => (60, 60 * 60 * 24),
         };
-
+    
         let to_ts = to.unwrap_or(now_ts);
         let from_ts = from.unwrap_or(to_ts - default_span);
-
-        if let Some(mut hist_ref) = self.history.get_mut(symbol) {
-            hist_ref.sort_by_key(|h| h.timestamp);
-
-            if let Some(first_ts) = hist_ref.first().map(|h| h.timestamp) {
-                if from_ts < first_ts {
+    
+        let mut backfilled_candles = Vec::new();
+        if let Some(hist_ref) = self.history.get(symbol) {
+            if let Some(first_candle) = hist_ref.first() {
+                if from_ts < first_candle.timestamp {
                     let mut rng = rand::thread_rng();
-                    let mut current_ts = first_ts - interval_sec;
-                    let mut current_price = hist_ref.first().unwrap().open;
-
+                    let backfill_step_sec = 60;
+                    let mut current_ts = first_candle.timestamp - backfill_step_sec;
+                    let mut current_price = first_candle.open;
+    
                     while current_ts >= from_ts {
                         let change_pct: f64 = rng.gen_range(-0.003..0.003);
                         let new_price = (current_price * (1.0 - change_pct)).max(0.01);
-
-                        hist_ref.insert(0, History {
+                        backfilled_candles.push(History {
                             open: new_price,
                             high: new_price.max(current_price),
                             low: new_price.min(current_price),
@@ -142,67 +129,70 @@ impl StockEmulator {
                             volume: rng.gen_range(500..5_000),
                             timestamp: current_ts,
                         });
-
                         current_price = new_price;
-                        current_ts -= interval_sec;
+                        current_ts -= backfill_step_sec;
                     }
                 }
             }
-
+        }
+    
+        if let Some(mut hist_ref) = self.history.get_mut(symbol) {
+            if !backfilled_candles.is_empty() {
+                backfilled_candles.reverse();
+                hist_ref.splice(0..0, backfilled_candles);
+            }
+    
             let window: Vec<History> = hist_ref
                 .iter()
                 .filter(|h| h.timestamp >= from_ts && h.timestamp <= to_ts)
                 .cloned()
                 .collect();
-
-            if interval_sec <= 60 {
+    
+            if window.is_empty() || interval_sec <= 60 {
                 return Ok(window);
             }
-
-            let mut buckets: Vec<History> = Vec::new();
-            let mut current_bucket_start = None::<i64>;
-            let mut open = 0.0;
-            let mut high = f64::MIN;
-            let mut low = f64::MAX;
-            let mut volume: u64 = 0;
-
-            for candle in window.iter() {
+    
+            let mut buckets = Vec::new();
+            let mut current_bucket_start = (window[0].timestamp / interval_sec) * interval_sec;
+            let mut open = window[0].open;
+            let mut high = window[0].high;
+            let mut low = window[0].low;
+            let mut close = window[0].close;
+            let mut volume = window[0].volume;
+    
+            for candle in window.iter().skip(1) {
                 let bucket_start = (candle.timestamp / interval_sec) * interval_sec;
-                if current_bucket_start.is_none() || current_bucket_start.unwrap() != bucket_start {
-                    if let Some(start) = current_bucket_start {
-                        buckets.push(History {
-                            open,
-                            high,
-                            low,
-                            close: window.iter().rev().find(|c| (c.timestamp / interval_sec) * interval_sec == start).unwrap().close,
-                            volume,
-                            timestamp: start,
-                        });
-                    }
-
-                    current_bucket_start = Some(bucket_start);
+                if bucket_start != current_bucket_start {
+                    buckets.push(History {
+                        open,
+                        high,
+                        low,
+                        close,
+                        volume,
+                        timestamp: current_bucket_start,
+                    });
+                    current_bucket_start = bucket_start;
                     open = candle.open;
                     high = candle.high;
                     low = candle.low;
+                    close = candle.close;
                     volume = candle.volume;
                 } else {
                     high = high.max(candle.high);
                     low = low.min(candle.low);
                     volume += candle.volume;
+                    close = candle.close;
                 }
             }
-
-            if let Some(start) = current_bucket_start {
-                buckets.push(History {
-                    open,
-                    high,
-                    low,
-                    close: window.last().unwrap().close,
-                    volume,
-                    timestamp: start,
-                });
-            }
-
+            buckets.push(History {
+                open,
+                high,
+                low,
+                close,
+                volume,
+                timestamp: current_bucket_start,
+            });
+    
             Ok(buckets)
         } else {
             Ok(vec![])

@@ -1,7 +1,7 @@
 import { PortfolioChart } from "./PortfolioChart";
 import { stockService } from "../services/stockService";
 
-type Resolution = "1D" | "1W" | "1M" | "1Y" | "5Y";
+type Resolution = "1D" | "1M" | "3M" | "1Y";
 
 interface StockChartCardProps {
     icon: string;
@@ -41,18 +41,17 @@ export const StockChartCard = ({
             </div>
             <div class="btn-group" role="group" aria-label="Chart time range">
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1D">1D</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm active" data-resolution="1W">1W</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1M">1M</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm active" data-resolution="1M">1M</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="3M">3M</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="1Y">1Y</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-resolution="5Y">5Y</button>
             </div>
         </div>
     `;
 
     const chartContainer = document.createElement('div');
-    chartContainer.style.height = '300px'; 
+    chartContainer.style.height = '300px';
     el.appendChild(chartContainer);
-    
+
     const initialData = {
         labels: [],
         datasets: [{
@@ -72,21 +71,19 @@ export const StockChartCard = ({
                 console.error('Failed to fetch candle data');
                 return;
             }
-            
+
             const labels = candleData.t.map(ts => {
                 const date = new Date(ts * 1000);
 
                 switch (resolution) {
-                    case '1D': // show time of day
+                    case '1D':
                         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    case '1W': // show day + short month
+                    case '1M':
                         return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
-                    case '1M': // show day + short month
+                    case '3M':
                         return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
-                    case '1Y': // show month + year
+                    case '1Y':
                         return date.toLocaleDateString([], { month: 'short', year: '2-digit' });
-                    case '5Y': // show month + year for readability
-                        return date.toLocaleDateString([], { month: 'short', year: 'numeric' });
                     default:
                         return date.toLocaleDateString();
                 }
@@ -100,7 +97,7 @@ export const StockChartCard = ({
                     borderColor: '#20c997', // $teal
                     backgroundColor: (context: any) => {
                         const chart = context.chart;
-                        const {ctx, chartArea} = chart;
+                        const { ctx, chartArea } = chart;
                         if (!chartArea) {
                             return null;
                         }
@@ -131,7 +128,7 @@ export const StockChartCard = ({
         });
     });
 
-    updateChart('1W');
+    updateChart('1M');
 
     return el;
 }; 

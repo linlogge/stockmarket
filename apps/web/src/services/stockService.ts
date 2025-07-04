@@ -113,7 +113,7 @@ class StockService {
         return await response.json();
     }
 
-    async getCandles(symbol: string, resolution: "1D" | "1W" | "1M" | "1Y" | "5Y"): Promise<CandleResponse> {
+    async getCandles(symbol: string, resolution: "1D" | "1M" | "3M" | "1Y"): Promise<CandleResponse> {
         const to = new Date();
         const from = new Date();
 
@@ -121,23 +121,20 @@ class StockService {
             case '1D':
                 from.setDate(to.getDate() - 1);
                 break;
-            case '1W':
-                from.setDate(to.getDate() - 7);
-                break;
             case '1M':
                 from.setMonth(to.getMonth() - 1);
                 break;
+            case '3M':
+                from.setMonth(to.getMonth() - 3);
+                break;
             case '1Y':
                 from.setFullYear(to.getFullYear() - 1);
-                break;
-            case '5Y':
-                from.setFullYear(to.getFullYear() - 5);
                 break;
         }
 
         const toTimestamp = Math.floor(to.getTime() / 1000);
         const fromTimestamp = Math.floor(from.getTime() / 1000);
-        
+
         const params = new URLSearchParams({
             resolution,
             from: fromTimestamp.toString(),
