@@ -10,6 +10,7 @@ import { tradeView } from './views/trade.ts';
 import { loginView } from './views/login.ts';
 import { settingsView } from './views/settings.ts';
 import { landingView } from './views/landing.ts';
+import { proView } from './views/pro.ts';
 
 document.addEventListener('DOMContentLoaded', () => {
   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -30,4 +31,5 @@ router
     .addRoute('/trade', tradeView, true)
     .addRoute('/login', loginView)
     .addRoute('/settings', settingsView, true)
+    .addRoute('/pro', proView, true)
     .start();

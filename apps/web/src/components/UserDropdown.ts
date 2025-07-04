@@ -11,8 +11,9 @@ export const UserDropdown = () => {
             <strong class="d-none d-lg-inline">Noël Sigmunczyk</strong>
         </a>
         <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser1">
-            <li><a class="dropdown-item" href="#">Settings</a></li>
-            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+            <li><a class="dropdown-item" href="/settings" data-link>Settings</a></li>
+            <li><a class="dropdown-item" href="/profile" data-link>Profile</a></li>
+            <li><a class="dropdown-item" href="/pro" data-link>Go Pro</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" id="sign-out-link">Sign out</a></li>
         </ul>
@@ -24,6 +25,21 @@ export const UserDropdown = () => {
             e.preventDefault();
             authService.logout();
             router.navigate('/login');
+        });
+    }
+
+    const settingsLink = el.querySelector('a[href="/settings"]');
+    if(settingsLink) {
+        settingsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            router.navigate('/settings');
+        });
+    }
+
+    const profileLink = el.querySelector('a[href="/profile"]');
+    if (profileLink) {
+        profileLink.addEventListener('click', (e) => {
+            e.preventDefault();
         });
     }
 
