@@ -2,6 +2,8 @@
 
 This is a full-stack stock market simulation application featuring a web frontend, a Rust backend, and a Flutter mobile app. It is designed as a monorepo, containing all applications within the `apps` directory.
 
+The production Frontend-Web-App can be found at [https://stockmarket.sigmunczyk.de](stockmarket.sigmunczyk.de)
+
 ## Features
 
 - **Cross-Platform**: Access the application via a modern web app or a native mobile app for iOS and Android.

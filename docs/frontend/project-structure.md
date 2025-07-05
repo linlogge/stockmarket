@@ -6,12 +6,21 @@ The frontend code is organized into a logical and maintainable structure within 
 /apps/web/src
 ├── components/       # Reusable UI components
 │   ├── DashboardHeader.ts
+│   ├── DashboardSidebar.ts
+│   ├── LandingHeader.ts
+│   ├── LoginButton.ts
 │   ├── LoginForm.ts
-│   ├── Navbar.ts
+│   ├── Logo.ts
 │   ├── PortfolioChart.ts
+│   ├── PortfolioValueCard.ts
 │   ├── PositionsTable.ts
+│   ├── SearchInput.ts
+│   ├── StockCard.ts
+│   ├── StockChartCard.ts
 │   ├── SummaryCard.ts
-│   └── TradeForm.ts
+│   ├── TradeForm.ts
+│   ├── UserDropdown.ts
+│   └── Watchlist.ts
 │
 ├── scss/             # Styling and theming
 │   └── styles.scss
@@ -24,6 +33,7 @@ The frontend code is organized into a logical and maintainable structure within 
 │   ├── dashboard.ts
 │   ├── landing.ts
 │   ├── login.ts
+│   ├── pro.ts
 │   ├── settings.ts
 │   └── trade.ts
 │
