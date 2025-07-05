@@ -221,6 +221,17 @@ class StockService {
         }
         return await response.json();
     }
+
+    async searchStocks(query: string): Promise<Stock[]> {
+        if (!query) {
+            return [];
+        }
+        const response = await fetch(`/api/emulate/search?q=${query}`);
+        if (!response.ok) {
+            throw new Error('Failed to search for stocks');
+        }
+        return await response.json();
+    }
 }
 
 export const stockService = new StockService(); 

@@ -1,6 +1,6 @@
 use crate::{
     auth::{auth_middleware, login},
-    emulator_handlers::{get_history, get_price, list_stocks},
+    emulator_handlers::{get_history, get_price, list_stocks, search_stocks},
     proxy::proxy_handler,
     state::AppState,
     stocks::{available_stocks_handler, get_country_code_handler},
@@ -22,6 +22,7 @@ pub fn create_router(state: AppState) -> Router {
 
     let emulator_routes = Router::new()
         .route("/", get(list_stocks))
+        .route("/search", get(search_stocks))
         .route("/:symbol/price", get(get_price))
         .route("/:symbol/history", get(get_history));
 

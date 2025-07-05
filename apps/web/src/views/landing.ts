@@ -4,6 +4,8 @@ import { StockCard } from "../components/StockCard";
 import { ICONS } from "../utils/icons";
 import { LandingHeader } from "../components/LandingHeader";
 import CountryPicker from "../components/CountryPicker";
+import { SearchInput } from "../components/SearchInput";
+import { router } from "../main";
 
 export const landingView = () => {
     const el = document.createElement('div');
@@ -14,6 +16,8 @@ export const landingView = () => {
     const header = document.createElement('h1');
     header.textContent = 'Market';
     el.appendChild(header);
+
+    el.appendChild(SearchInput());
 
     let locale: "US" | "DE" | undefined;
 
@@ -60,21 +64,33 @@ export const landingView = () => {
 
         const stockPrice = priceMap.get(stock.symbol);
         if (!stockPrice) {
-            console.error(`Price not found for ${stock.symbol}`);
-            chartContainer.innerHTML = `<p class="text-danger">Could not load chart for ${stock.symbol}.</p>`;
-            return;
+            const priceData = await stockService.getStockPrice(stock.symbol);
+            if (priceData.mid.length > 0) {
+                priceMap.set(stock.symbol, { price: priceData.mid[0], diff: priceData.diff[0] });
+            } else {
+                console.error(`Price not found for ${stock.symbol}`);
+                chartContainer.innerHTML = `<p class="text-danger">Could not load chart for ${stock.symbol}.</p>`;
+                return;
+            }
         }
+
+        const finalStockPrice = priceMap.get(stock.symbol)!;
 
         chartContainer.innerHTML = '';
         const stockChartCard = StockChartCard({
             icon: ICONS[stock.symbol] || ICONS['DEFAULT'],
             companyName: stock.company,
             symbol: stock.symbol,
-            price: stockPrice.price,
-            priceDiff: stockPrice.diff,
-            priceDiffPercent: stockPrice.price - stockPrice.diff !== 0 ? (stockPrice.diff / (stockPrice.price - stockPrice.diff)) * 100 : 0,
+            price: finalStockPrice.price,
+            priceDiff: finalStockPrice.diff,
+            priceDiffPercent: finalStockPrice.price - finalStockPrice.diff !== 0 ? (finalStockPrice.diff / (finalStockPrice.price - finalStockPrice.diff)) * 100 : 0,
         });
         chartContainer.appendChild(stockChartCard);
+
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        if (currentUrlParams.get('symbol') !== stock.symbol) {
+             router.navigate(`/?symbol=${stock.symbol}`);
+        }
     };
 
     const updateCardDOM = (cardElement: HTMLElement, price: number, diff: number) => {
@@ -119,21 +135,33 @@ export const landingView = () => {
 
     const init = async (countryCode: "US" | "DE" | undefined) => {
         try {
+            clearInterval(intervalId);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchedSymbol = urlParams.get('symbol');
+
+            // If a symbol is in the URL, prioritize rendering its chart.
+            if (searchedSymbol) {
+                const stock = await stockService.searchStocks(searchedSymbol);
+                if (stock.length > 0) {
+                    await renderStockChartCard(stock[0]);
+                } else {
+                    chartContainer.innerHTML = `<p>Stock '${searchedSymbol}' not found.</p>`;
+                }
+            }
+
+            // Load the market overview of popular stocks.
             if (!countryCode) {
                 countryCode = await getCountryCode();
                 locale = countryCode;
                 countryPicker.setValue(countryCode);
             }
 
-            clearInterval(intervalId);
             stockCardsContainer.innerHTML = '';
-            chartContainer.innerHTML = '';
-            stocks = [];
-            selectedStock = null;
-            priceMap.clear();
             stockCardElements.clear();
 
             stocks = await stockService.getAvailableStocks(countryCode);
+
             if (stocks.length > 0) {
                 const symbols = stocks.map(s => s.symbol);
                 const priceData = await stockService.getStockPrice(symbols);
@@ -160,17 +188,24 @@ export const landingView = () => {
                     }
                 });
 
-                if (!selectedStock) {
+                if (!searchedSymbol) {
                     selectedStock = stocks[0];
+                    renderStockChartCard(selectedStock);
                 }
-                renderStockChartCard(selectedStock);
-                intervalId = window.setInterval(updatePrices, 1000);
             } else {
-                chartContainer.innerHTML = `<p>No stocks available.</p>`;
+                if (!searchedSymbol) {
+                    chartContainer.innerHTML = `<p>No stocks available.</p>`;
+                }
             }
+
+            intervalId = window.setInterval(updatePrices, 1000);
+
         } catch (error) {
-            console.error('Failed to load available stocks', error);
-            chartContainer.innerHTML = `<p class="text-danger">Could not load available stocks.</p>`;
+            console.error('Failed to load landing page', error);
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.get('symbol')) {
+                chartContainer.innerHTML = `<p class="text-danger">Could not load page.</p>`;
+            }
         }
     };
 

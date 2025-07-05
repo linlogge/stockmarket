@@ -56,6 +56,21 @@ impl StockEmulator {
         self.stocks.to_vec()
     }
 
+    pub fn search_stocks(&self, query: &str) -> Vec<Stock> {
+        if query.is_empty() {
+            return vec![];
+        }
+        let lower_query = query.to_lowercase();
+        self.stocks
+            .iter()
+            .filter(|s| {
+                s.symbol.to_lowercase().contains(&lower_query)
+                    || s.company.to_lowercase().contains(&lower_query)
+            })
+            .cloned()
+            .collect()
+    }
+
     pub async fn price(&self, symbol: &str) -> Result<PriceInfo, EmulationError> {
         if !self.stocks.iter().any(|s| s.symbol == symbol) {
             return Err(EmulationError::StockNotFound(symbol.to_string()));

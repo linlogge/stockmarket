@@ -66,4 +66,17 @@ pub async fn list_stocks(
 ) -> impl IntoResponse {
     let stocks = state.emulator.stocks(&params.locale);
     (StatusCode::OK, Json(stocks)).into_response()
+}
+
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    pub q: String,
+}
+
+pub async fn search_stocks(
+    State(state): State<AppState>,
+    Query(params): Query<SearchQuery>,
+) -> impl IntoResponse {
+    let stocks = state.emulator.search_stocks(&params.q);
+    (StatusCode::OK, Json(stocks))
 } 
