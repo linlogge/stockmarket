@@ -10,13 +10,13 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
-  final String _baseUrl = API_BASE_URL;
+  final String _baseUrl = apiBaseUrl;
   static const _tokenKey = 'auth_token';
 
   Future<void> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/login'),
+        Uri.parse('$_baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

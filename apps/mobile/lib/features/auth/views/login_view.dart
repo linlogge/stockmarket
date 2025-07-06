@@ -13,7 +13,7 @@ class LoginView extends ConsumerStatefulWidget {
 class _LoginViewState extends ConsumerState<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(text: 'test@example.com');
-  final _passwordController = TextEditingController(text: 'password');
+  final _passwordController = TextEditingController(text: 'password123');
   bool _isLoading = false;
   String? _errorMessage;
 

@@ -20,10 +20,9 @@ class MyApp extends ConsumerWidget {
       title: 'StockMarket',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1D1D1D),
-        cardColor: const Color(0xFF2C2C2C),
+        brightness: Brightness.light,
       ),
+      themeMode: ThemeMode.light,
       routerConfig: router,
     );
   }

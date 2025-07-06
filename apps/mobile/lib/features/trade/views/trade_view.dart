@@ -162,7 +162,7 @@ class _TradeViewState extends ConsumerState<TradeView> {
                         ref.watch(stockPriceProvider(selectedSymbol));
                     return priceAsync.when(
                       data: (price) => Text(
-                        'Current Price: ${price.toStringAsFixed(2)} €',
+                        'Current Price: ${price.price.toStringAsFixed(2)} €',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       loading: () => const Text('Fetching price...'),

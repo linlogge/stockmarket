@@ -4,6 +4,7 @@ import 'package:stockmarket/core/services/api_service.dart';
 import 'package:stockmarket/core/services/auth_service.dart';
 import 'package:stockmarket/models/portfolio_history.dart';
 import 'package:stockmarket/models/portfolio_summary.dart';
+import 'package:stockmarket/models/price_info.dart';
 import 'package:stockmarket/models/stock.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -16,7 +17,7 @@ final availableStocksProvider = FutureProvider<List<Stock>>((ref) {
   return apiService.getAvailableStocks();
 });
 
-final stockPriceProvider = FutureProvider.family<double, String>((ref, symbol) {
+final stockPriceProvider = FutureProvider.family<PriceInfo, String>((ref, symbol) {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getStockPrice(symbol);
 });
