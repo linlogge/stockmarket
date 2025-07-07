@@ -5,7 +5,7 @@ export const Logo = (): HTMLElement => {
     el.className = 'd-flex align-items-center';
     el.innerHTML = `
         ${LogoIcon}
-        <span class="fs-4 ms-2 fw-bold">StockImArsch</span>
+        <span class="fs-4 ms-2 fw-bold">Stockmarket</span>
     `;
     return el;
 };
