@@ -8,7 +8,7 @@ export const UserDropdown = () => {
     el.innerHTML = `
         <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle icon-link" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
             ${User}
-            <strong class="d-none d-lg-inline">Noël Sigmunczyk</strong>
+            <strong class="d-none d-lg-inline">Ivan Malakhov</strong>
         </a>
         <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser1">
             <li><a class="dropdown-item" href="/settings" data-link>Settings</a></li>
