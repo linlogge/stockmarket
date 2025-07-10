@@ -40,7 +40,7 @@ class ApiService {
       throw Exception('Failed to load portfolio summary');
     }
   }
-
+  
   Future<PortfolioHistory> getPortfolioHistory() async {
     final headers = await _getHeaders();
     final response = await http.get(Uri.parse('$_baseUrl/portfolio/history'), headers: headers);
@@ -116,7 +116,7 @@ class ApiService {
       throw Exception('Failed to load candles');
     }
   }
-  
+
   Future<List<Stock>> searchStocks(String query) async {
     if (query.isEmpty) {
       return [];
@@ -187,4 +187,4 @@ final portfolioSummaryProvider = StreamProvider((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return Stream.periodic(const Duration(seconds: 1))
       .asyncMap((_) => apiService.getPortfolioSummary());
-}); 
+});

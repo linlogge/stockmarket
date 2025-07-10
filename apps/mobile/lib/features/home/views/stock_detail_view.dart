@@ -8,12 +8,13 @@ import 'package:stockmarket/models/stock.dart';
 
 final selectedResolutionProvider = StateProvider<String>((ref) => '1D');
 
-final candlesProvider =
-    FutureProvider.autoDispose.family<List<Candle>, String>((ref, symbol) {
-  final apiService = ref.watch(apiServiceProvider);
-  final resolution = ref.watch(selectedResolutionProvider);
-  return apiService.getCandles(symbol, resolution);
-});
+final candlesProvider = FutureProvider.autoDispose.family<List<Candle>, String>(
+  (ref, symbol) {
+    final apiService = ref.watch(apiServiceProvider);
+    final resolution = ref.watch(selectedResolutionProvider);
+    return apiService.getCandles(symbol, resolution);
+  },
+);
 
 class StockDetailView extends ConsumerWidget {
   final Stock stock;
@@ -25,20 +26,18 @@ class StockDetailView extends ConsumerWidget {
     final resolutions = ['1D', '1M', '3M', '1Y'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(stock.company),
-      ),
+      appBar: AppBar(title: Text(stock.company)),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: SegmentedButton<String>(
-              segments: resolutions
-                  .map((r) => ButtonSegment<String>(
-                        value: r,
-                        label: Text(r),
-                      ))
-                  .toList(),
+              segments:
+                  resolutions
+                      .map(
+                        (r) => ButtonSegment<String>(value: r, label: Text(r)),
+                      )
+                      .toList(),
               selected: {ref.watch(selectedResolutionProvider)},
               onSelectionChanged: (newSelection) {
                 ref.read(selectedResolutionProvider.notifier).state =
@@ -46,6 +45,7 @@ class StockDetailView extends ConsumerWidget {
               },
             ),
           ),
+          ElevatedButton(child: Text('News'), onPressed: () {}),
           Expanded(
             child: candles.when(
               data: (data) {
@@ -58,23 +58,24 @@ class StockDetailView extends ConsumerWidget {
                     LineChartData(
                       lineBarsData: [
                         LineChartBarData(
-                          spots: data.map((candle) {
-                            return FlSpot(
-                              candle.timestamp.toDouble(),
-                              candle.close,
-                            );
-                          }).toList(),
+                          spots:
+                              data.map((candle) {
+                                return FlSpot(
+                                  candle.timestamp.toDouble(),
+                                  candle.close,
+                                );
+                              }).toList(),
                           isCurved: true,
                           color: Theme.of(context).primaryColor,
                           barWidth: 2,
                           dotData: const FlDotData(show: false),
                           belowBarData: BarAreaData(
                             show: true,
-                            color: Theme.of(context)
-                                .primaryColor
-                                .withOpacity(0.2),
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.2),
                           ),
-                        )
+                        ),
                       ],
                       titlesData: FlTitlesData(
                         bottomTitles: AxisTitles(
@@ -82,8 +83,13 @@ class StockDetailView extends ConsumerWidget {
                             showTitles: true,
                             reservedSize: 30,
                             getTitlesWidget: (value, meta) {
-                              final resolution = ref.read(selectedResolutionProvider);
-                              final dateTime = DateTime.fromMillisecondsSinceEpoch(value.toInt() * 1000);
+                              final resolution = ref.read(
+                                selectedResolutionProvider,
+                              );
+                              final dateTime =
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                    value.toInt() * 1000,
+                                  );
                               String text = '';
                               if (resolution == '1D') {
                                 text = DateFormat.Hm().format(dateTime);
@@ -105,13 +111,18 @@ class StockDetailView extends ConsumerWidget {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            getTitlesWidget: (value, meta) =>
-                                Text(NumberFormat.compact().format(value)),
+                            getTitlesWidget:
+                                (value, meta) =>
+                                    Text(NumberFormat.compact().format(value)),
                             reservedSize: 40,
                           ),
                         ),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                       gridData: const FlGridData(show: false),
                       borderData: FlBorderData(show: false),
@@ -120,12 +131,13 @@ class StockDetailView extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) =>
-                  Center(child: Text('Error loading chart: $err')),
+              error:
+                  (err, stack) =>
+                      Center(child: Text('Error loading chart: $err')),
             ),
           ),
         ],
       ),
     );
   }
-} 
+}

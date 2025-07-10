@@ -7,6 +7,7 @@ import 'package:stockmarket/models/stock.dart';
 import 'package:stockmarket/features/home/widgets/portfolio_chart.dart';
 import 'package:stockmarket/features/home/widgets/summary_card.dart';
 import 'package:stockmarket/features/home/views/stock_detail_view.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 final availableStocksProvider = FutureProvider<List<Stock>>((ref) {
   final apiService = ref.watch(apiServiceProvider);
@@ -39,7 +40,13 @@ class HomeView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Explore Stocks'),
+        title: Row(
+          children: [
+            SvgPicture.asset('assets/logo.svg'),
+            const SizedBox(width: 8),
+            Text('Explore Stocks'),
+          ]
+        ),
       ),
       body: Column(
         children: [
@@ -118,4 +125,4 @@ class StockCard extends ConsumerWidget {
       ),
     );
   }
-} 
+}

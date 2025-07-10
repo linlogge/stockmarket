@@ -1,0 +1,30 @@
+{
+  "name": "jira-sprint-importer",
+  "version": "1.0.0",
+  "description": "TypeScript script to import sprint data from markdown files to Jira",
+  "main": "jira-import-script.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node jira-import-script.ts",
+    "dev": "ts-node --watch jira-import-script.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "keywords": [
+    "jira",
+    "agile",
+    "sprint",
+    "import",
+    "typescript"
+  ],
+  "author": "StockMarket Team",
+  "license": "MIT"
+} 
